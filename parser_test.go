@@ -192,3 +192,29 @@ func TestParser(t *testing.T) {
 	invalid("1.2.3.4")
 	invalid("1.2.3.")
 }
+
+func TestParseRelaxed(t *testing.T) {
+	bad := ParseRelaxed("bad")
+	require.Nil(t, bad.version)
+	require.Equal(t, []byte("bad"), bad.customversion)
+	require.Equal(t, "bad", bad.String())
+	good := ParseRelaxed("1.2.3-pre.a.10+build3.123.001")
+	require.Nil(t, good.customversion)
+	require.Equal(t, "1.2.3-pre.a.10+build3.123.001", good.version.String())
+	require.Equal(t, "1.2.3-pre.a.10+build3.123.001", good.String())
+
+}
+
+func ExampleParseRelaxed() {
+	WarnInvalidVersionWhenParsingRelaxed = true
+	ParseRelaxed("bad")
+	WarnInvalidVersionWhenParsingRelaxed = false
+
+	// Output:
+	// WARNING invalid semver version bad: no major version found
+}
+
+func TestMustParse(t *testing.T) {
+	require.NotPanics(t, func() { MustParse("1.2.3") })
+	require.Panics(t, func() { MustParse("bad") })
+}

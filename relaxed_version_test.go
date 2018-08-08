@@ -13,9 +13,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestVersionComparator(t *testing.T) {
+func TestRelaxedVersionComparator(t *testing.T) {
 	sign := map[int]string{1: ">", 0: "=", -1: "<"}
-	ascending := func(list ...*Version) {
+	ascending := func(list ...*RelaxedVersion) {
 		for i := range list[0 : len(list)-1] {
 			a := list[i]
 			b := list[i+1]
@@ -38,7 +38,7 @@ func TestVersionComparator(t *testing.T) {
 			require.True(t, b.GreaterThan(a))
 		}
 	}
-	equal := func(list ...*Version) {
+	equal := func(list ...*RelaxedVersion) {
 		for _, a := range list {
 			for _, b := range list {
 				comp := a.CompareTo(b)
@@ -62,39 +62,32 @@ func TestVersionComparator(t *testing.T) {
 		}
 	}
 	ascending(
-		MustParse("1.0.0-alpha"),
-		MustParse("1.0.0-alpha.1"),
-		MustParse("1.0.0-alpha.beta"),
-		MustParse("1.0.0-beta"),
-		MustParse("1.0.0-beta.2"),
-		MustParse("1.0.0-beta.11"),
-		MustParse("1.0.0-rc.1"),
-		MustParse("1.0.0"),
-		MustParse("1.0.1"),
-		MustParse("1.1.1"),
-		MustParse("2.1.1"),
+		ParseRelaxed("6_2"),
+		ParseRelaxed("alpha"),
+		ParseRelaxed("beta"),
+		ParseRelaxed("gamma"),
+		ParseRelaxed("1.0.0-alpha"),
+		ParseRelaxed("1.0.0-alpha.1"),
+		ParseRelaxed("1.0.0-alpha.beta"),
+		ParseRelaxed("1.0.0-beta"),
+		ParseRelaxed("1.0.0-beta.2"),
+		ParseRelaxed("1.0.0-beta.11"),
+		ParseRelaxed("1.0.0-rc.1"),
+		ParseRelaxed("1.0.0"),
+		ParseRelaxed("1.0.1"),
+		ParseRelaxed("1.1.1"),
+		ParseRelaxed("2.1.1"),
 	)
 	equal(
-		MustParse(""),
-		MustParse("0"),
-		MustParse("0.0"),
-		MustParse("0.0.0"),
-		MustParse("0+aaa"),
-		MustParse("0.0+aaa"),
-		MustParse("0.0.0+aaa"),
-		MustParse("0+aaa.bbb"),
-		MustParse("0.0+aaa.bbb"),
-		MustParse("0.0.0+aaa.bbb"),
-	)
-	equal(
-		MustParse("0-ab"),
-		MustParse("0.0-ab"),
-		MustParse("0.0.0-ab"),
-		MustParse("0-ab+aaa"),
-		MustParse("0.0-ab+aaa"),
-		MustParse("0.0.0-ab+aaa"),
-		MustParse("0-ab+aaa.bbb"),
-		MustParse("0.0-ab+aaa.bbb"),
-		MustParse("0.0.0-ab+aaa.bbb"),
+		ParseRelaxed(""),
+		ParseRelaxed("0"),
+		ParseRelaxed("0.0"),
+		ParseRelaxed("0.0.0"),
+		ParseRelaxed("0+aaa"),
+		ParseRelaxed("0.0+aaa"),
+		ParseRelaxed("0.0.0+aaa"),
+		ParseRelaxed("0+aaa.bbb"),
+		ParseRelaxed("0.0+aaa.bbb"),
+		ParseRelaxed("0.0.0+aaa.bbb"),
 	)
 }
