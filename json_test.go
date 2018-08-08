@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestJSON(t *testing.T) {
+func TestJSONParseVersion(t *testing.T) {
 	testVersion := "1.2.3-aaa.4.5.6+bbb.7.8.9"
 	v, err := Parse(testVersion)
 	require.NoError(t, err)
@@ -36,5 +36,30 @@ func TestJSON(t *testing.T) {
 	require.Equal(t, testVersion, v.String())
 
 	err = json.Unmarshal([]byte(`"invalid"`), &u)
+	require.Error(t, err)
+
+	err = json.Unmarshal([]byte(`123`), &u)
+	require.Error(t, err)
+}
+
+func TestJSONParseRelaxedVersion(t *testing.T) {
+	testVersion := "1.2.3-aaa.4.5.6+bbb.7.8.9"
+	v := ParseRelaxed(testVersion)
+
+	data, err := json.Marshal(v)
+	fmt.Println(string(data))
+	require.NoError(t, err)
+
+	var u RelaxedVersion
+	err = json.Unmarshal(data, &u)
+	require.NoError(t, err)
+
+	require.Equal(t, testVersion, v.String())
+
+	err = json.Unmarshal([]byte(`"invalid"`), &u)
+	require.NoError(t, err)
+	require.Equal(t, "invalid", u.String())
+
+	err = json.Unmarshal([]byte(`123`), &u)
 	require.Error(t, err)
 }
