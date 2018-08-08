@@ -1,6 +1,7 @@
 
 
-# go.bug.st/relaxed-semver [![build status](https://api.travis-ci.org/bugst/relaxed-semver.svg?branch=master)](https://travis-ci.org/bugst/relaxed-semver)
+# go.bug.st/relaxed-semver [![build status](https://api.travis-ci.org/bugst/relaxed-semver.svg?branch=master)](https://travis-ci.org/bugst/relaxed-semver) [![codecov](https://codecov.io/gh/bugst/relaxed-semver/branch/master/graph/badge.svg)](https://codecov.io/gh/bugst/relaxed-semver)
+
 
 
 A library for handling a superset of semantic versioning in golang.
