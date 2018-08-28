@@ -91,3 +91,8 @@ func TestRelaxedVersionComparator(t *testing.T) {
 		ParseRelaxed("0.0.0+aaa.bbb"),
 	)
 }
+
+func TestNilRelaxedVersionString(t *testing.T) {
+	var nilVersion *RelaxedVersion
+	require.Equal(t, "", nilVersion.String())
+}

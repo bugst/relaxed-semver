@@ -33,6 +33,9 @@ func ParseRelaxed(in string) *RelaxedVersion {
 }
 
 func (v *RelaxedVersion) String() string {
+	if v == nil {
+		return ""
+	}
 	if v.version != nil {
 		return v.version.String()
 	}

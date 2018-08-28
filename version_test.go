@@ -98,3 +98,8 @@ func TestVersionComparator(t *testing.T) {
 		MustParse("0.0.0-ab+aaa.bbb"),
 	)
 }
+
+func TestNilVersionString(t *testing.T) {
+	var nilVersion *Version
+	require.Equal(t, "", nilVersion.String())
+}
