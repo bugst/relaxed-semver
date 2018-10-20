@@ -44,6 +44,7 @@ func TestParser(t *testing.T) {
 	}
 
 	valid("", "0.0.0", ",,")
+	invalid("0.0.0.0")
 	invalid("a")
 	invalid(".")
 	invalid("-ab")
