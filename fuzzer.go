@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 //
 
-// build +gofuzz
+// +build gofuzz
 
 package semver
 
