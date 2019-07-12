@@ -72,6 +72,8 @@ func TestVersionComparator(t *testing.T) {
 		MustParse("1.0.0"),
 		MustParse("1.0.1"),
 		MustParse("1.1.1"),
+		MustParse("1.6.22"),
+		MustParse("1.8.1"),
 		MustParse("2.1.1"),
 	)
 	equal(
