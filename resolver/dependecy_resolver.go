@@ -12,43 +12,13 @@ import (
 	semver "go.bug.st/relaxed-semver"
 )
 
-type Operator int
-
-const (
-	Equals             Operator = iota // =
-	LessThan                           // <
-	LessThanOrEqual                    // <=
-	GreaterThan                        // >
-	GreaterThanOrEqual                 // >=
-	CompatibleWith                     // ^
-)
-
-func (o Operator) String() string {
-	switch o {
-	case Equals:
-		return "="
-	case LessThan:
-		return "<"
-	case LessThanOrEqual:
-		return "<="
-	case GreaterThan:
-		return ">"
-	case GreaterThanOrEqual:
-		return ">="
-	case CompatibleWith:
-		return "^"
-	}
-	return "?"
-}
-
 type Dependency struct {
-	Name    string
-	Version *semver.Version
-	Op      Operator
+	Name       string
+	Constraint Constraint
 }
 
 func (d *Dependency) String() string {
-	return d.Name + d.Op.String() + d.Version.String()
+	return d.Name + d.Constraint.String()
 }
 
 type Release struct {
@@ -62,24 +32,7 @@ func (r *Release) String() string {
 }
 
 func (r *Release) Match(dep *Dependency) bool {
-	if r.Name != dep.Name {
-		return false
-	}
-	switch dep.Op {
-	case Equals:
-		return r.Version.Equal(dep.Version)
-	case LessThan:
-		return r.Version.LessThan(dep.Version)
-	case LessThanOrEqual:
-		return r.Version.LessThanOrEqual(dep.Version)
-	case GreaterThan:
-		return r.Version.GreaterThan(dep.Version)
-	case GreaterThanOrEqual:
-		return r.Version.GreaterThanOrEqual(dep.Version)
-	case CompatibleWith:
-		panic("todo: " + dep.String())
-	}
-	panic("invalid dependency " + dep.String())
+	return r.Name == dep.Name && dep.Constraint.Match(r.Version)
 }
 
 type ReleasesSet []*Release
