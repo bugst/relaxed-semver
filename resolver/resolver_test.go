@@ -19,38 +19,54 @@ func v(vers string) *semver.Version {
 	return semver.MustParse(vers)
 }
 
-func d(dep string) *Dependency {
+type customDep struct {
+	name string
+	cond semver.Constraint
+}
+
+func (c *customDep) Name() string {
+	return c.name
+}
+
+func (c *customDep) Constraint() semver.Constraint {
+	return c.cond
+}
+
+func (c *customDep) String() string {
+	return c.name + c.cond.String()
+}
+
+func d(dep string) Dependency {
 	name := dep[0:1]
 	switch dep[1:3] {
 	case ">=":
-		return &Dependency{Name: name, Constraint: &semver.GreaterThanOrEqual{Version: v(dep[3:])}}
+		return &customDep{name: name, cond: &semver.GreaterThanOrEqual{Version: v(dep[3:])}}
 	case "<=":
-		return &Dependency{Name: name, Constraint: &semver.LessThanOrEqual{Version: v(dep[3:])}}
+		return &customDep{name: name, cond: &semver.LessThanOrEqual{Version: v(dep[3:])}}
 	}
 	switch dep[1:2] {
 	case "=":
-		return &Dependency{Name: name, Constraint: &semver.Equals{Version: v(dep[2:])}}
+		return &customDep{name: name, cond: &semver.Equals{Version: v(dep[2:])}}
 	case ">":
-		return &Dependency{Name: name, Constraint: &semver.GreaterThan{Version: v(dep[2:])}}
+		return &customDep{name: name, cond: &semver.GreaterThan{Version: v(dep[2:])}}
 	case "<":
-		return &Dependency{Name: name, Constraint: &semver.LessThan{Version: v(dep[2:])}}
+		return &customDep{name: name, cond: &semver.LessThan{Version: v(dep[2:])}}
 	case "^":
 		panic("'compatible with' operator not implemented: " + dep)
-		// return &Dependency{Name: name, Constraint: &CompatibleWithConstraint{Version: v(dep[2:])}}
 	default:
 		panic("invalid operator in dep: " + dep)
 	}
 }
 
-func deps(deps ...string) []*Dependency {
-	res := []*Dependency{}
+func deps(deps ...string) []Dependency {
+	res := []Dependency{}
 	for _, dep := range deps {
 		res = append(res, d(dep))
 	}
 	return res
 }
 
-func rel(name, ver string, deps []*Dependency) *Release {
+func rel(name, ver string, deps []Dependency) *Release {
 	return &Release{Name: name, Version: v(ver), Dependencies: deps}
 }
 
