@@ -36,6 +36,28 @@ func (c *customDep) String() string {
 	return c.name + c.cond.String()
 }
 
+type customRel struct {
+	name string
+	vers *semver.Version
+	deps []Dependency
+}
+
+func (r *customRel) Name() string {
+	return r.name
+}
+
+func (r *customRel) Version() *semver.Version {
+	return r.vers
+}
+
+func (r *customRel) Dependencies() []Dependency {
+	return r.deps
+}
+
+func (r *customRel) String() string {
+	return r.name + "@" + r.vers.String()
+}
+
 func d(dep string) Dependency {
 	name := dep[0:1]
 	switch dep[1:3] {
@@ -66,8 +88,8 @@ func deps(deps ...string) []Dependency {
 	return res
 }
 
-func rel(name, ver string, deps []Dependency) *Release {
-	return &Release{Name: name, Version: v(ver), Dependencies: deps}
+func rel(name, ver string, deps []Dependency) Release {
+	return &customRel{name: name, vers: v(ver), deps: deps}
 }
 
 func TestResolver(t *testing.T) {
