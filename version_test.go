@@ -39,8 +39,8 @@ func TestVersionComparator(t *testing.T) {
 		}
 	}
 	equal := func(list ...*Version) {
-		for _, a := range list {
-			for _, b := range list {
+		for i, a := range list[:len(list)-1] {
+			for _, b := range list[i+1:] {
 				comp := a.CompareTo(b)
 				fmt.Printf("%s %s %s\n", a, sign[comp], b)
 				require.Equal(t, comp, 0)
