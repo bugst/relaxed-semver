@@ -57,16 +57,22 @@ func (ar *Archive) Resolve(release *Release) []*Release {
 	return ar.resolve(solution, depsToProcess)
 }
 
+// To be redefined in Tests to increase output
+var verbose = false
+
 func (ar *Archive) resolve(solution map[string]*Release, depsToProcess []*Dependency) []*Release {
-	debug := func(msg string) {
-		for i := 0; i < len(solution); i++ {
-			fmt.Print("   ")
+	debug := func(msg string) {}
+	if verbose {
+		debug = func(msg string) {
+			for i := 0; i < len(solution); i++ {
+				fmt.Print("   ")
+			}
+			fmt.Println(msg)
 		}
-		fmt.Println(msg)
 	}
+	debug(fmt.Sprintf("deps to process: %s", depsToProcess))
 	if len(depsToProcess) == 0 {
 		debug("All dependencies have been resolved.")
-		debug(fmt.Sprintf(">> %s", solution))
 		res := []*Release{}
 		for _, v := range solution {
 			res = append(res, v)
@@ -80,12 +86,11 @@ func (ar *Archive) resolve(solution map[string]*Release, depsToProcess []*Depend
 
 	// If a release is already picked in the solution check if it match the dep
 	if existingRelease, has := solution[dep.Name]; has {
-		debug("already in solution...")
 		if existingRelease.Match(dep) {
-			debug("...and the release match the dependency, go on")
+			debug(fmt.Sprintf("%s already in solution and matching", existingRelease))
 			return ar.resolve(solution, depsToProcess[1:])
 		}
-		debug("...and the release do NOT match dependency, rollback")
+		debug(fmt.Sprintf("%s already in solution do not match... rollingback", existingRelease))
 		return nil
 	}
 
@@ -93,7 +98,7 @@ func (ar *Archive) resolve(solution map[string]*Release, depsToProcess []*Depend
 	releases := ar.Releases[dep.Name].FilterBy(dep)
 	debug(fmt.Sprintf("releases matching criteria: %s", releases))
 	for _, release := range releases {
-		debug(fmt.Sprintf("try with %s", release))
+		debug(fmt.Sprintf("try with %s %s", release, release.Dependencies))
 		solution[dep.Name] = release
 		res := ar.resolve(solution, append(depsToProcess[1:], release.Dependencies...))
 		if res != nil {
