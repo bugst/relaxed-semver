@@ -24,11 +24,11 @@ type customDep struct {
 	cond semver.Constraint
 }
 
-func (c *customDep) Name() string {
+func (c *customDep) GetName() string {
 	return c.name
 }
 
-func (c *customDep) Constraint() semver.Constraint {
+func (c *customDep) GetConstraint() semver.Constraint {
 	return c.cond
 }
 
@@ -42,15 +42,15 @@ type customRel struct {
 	deps []Dependency
 }
 
-func (r *customRel) Name() string {
+func (r *customRel) GetName() string {
 	return r.name
 }
 
-func (r *customRel) Version() *semver.Version {
+func (r *customRel) GetVersion() *semver.Version {
 	return r.vers
 }
 
-func (r *customRel) Dependencies() []Dependency {
+func (r *customRel) GetDependencies() []Dependency {
 	return r.deps
 }
 
@@ -111,9 +111,9 @@ func TestResolver(t *testing.T) {
 	c020 := rel("C", "0.2.0", deps())
 	c010 := rel("C", "0.1.0", deps())
 	arch := &Archive{
-		Releases: map[string]ReleasesSet{
-			"B": ReleasesSet{b131, b130, b121, b120, b111, b110, b100},
-			"C": ReleasesSet{c200, c120, c111, c110, c102, c101, c100, c021, c020, c010},
+		Releases: map[string]Releases{
+			"B": Releases{b131, b130, b121, b120, b111, b110, b100},
+			"C": Releases{c200, c120, c111, c110, c102, c101, c100, c021, c020, c010},
 		},
 	}
 

@@ -14,24 +14,25 @@ import (
 
 // Dependency represents a dependency, it must provide methods to return Name and Constraints
 type Dependency interface {
-	Name() string
-	Constraint() semver.Constraint
+	GetName() string
+	GetConstraint() semver.Constraint
 }
 
 // Release represents a release, it must provide methods to return Name, Version and Dependencies
 type Release interface {
-	Name() string
-	Version() *semver.Version
-	Dependencies() []Dependency
+	GetName() string
+	GetVersion() *semver.Version
+	GetDependencies() []Dependency
 }
 
 func match(r Release, dep Dependency) bool {
-	return r.Name() == dep.Name() && dep.Constraint().Match(r.Version())
+	return r.GetName() == dep.GetName() && dep.GetConstraint().Match(r.GetVersion())
 }
 
-type ReleasesSet []Release
+// Releases is a list of Release
+type Releases []Release
 
-func (set ReleasesSet) FilterBy(dep Dependency) ReleasesSet {
+func (set Releases) FilterBy(dep Dependency) Releases {
 	res := []Release{}
 	for _, r := range set {
 		if match(r, dep) {
@@ -42,12 +43,12 @@ func (set ReleasesSet) FilterBy(dep Dependency) ReleasesSet {
 }
 
 type Archive struct {
-	Releases map[string]ReleasesSet
+	Releases map[string]Releases
 }
 
 func (ar *Archive) Resolve(release Release) []Release {
-	solution := map[string]Release{release.Name(): release}
-	depsToProcess := release.Dependencies()
+	solution := map[string]Release{release.GetName(): release}
+	depsToProcess := release.GetDependencies()
 	return ar.resolve(solution, depsToProcess)
 }
 
@@ -76,7 +77,7 @@ func (ar *Archive) resolve(solution map[string]Release, depsToProcess []Dependen
 
 	// Pick the first dependency in the deps to process
 	dep := depsToProcess[0]
-	depName := dep.Name()
+	depName := dep.GetName()
 	debug(fmt.Sprintf("Considering next dep: %s", dep))
 
 	// If a release is already picked in the solution check if it match the dep
@@ -90,12 +91,12 @@ func (ar *Archive) resolve(solution map[string]Release, depsToProcess []Dependen
 	}
 
 	// Otherwise start backtracking the dependency
-	releases := ar.Releases[dep.Name()].FilterBy(dep)
+	releases := ar.Releases[dep.GetName()].FilterBy(dep)
 	debug(fmt.Sprintf("releases matching criteria: %s", releases))
 	for _, release := range releases {
-		debug(fmt.Sprintf("try with %s %s", release, release.Dependencies()))
+		debug(fmt.Sprintf("try with %s %s", release, release.GetDependencies()))
 		solution[depName] = release
-		res := ar.resolve(solution, append(depsToProcess[1:], release.Dependencies()...))
+		res := ar.resolve(solution, append(depsToProcess[1:], release.GetDependencies()...))
 		if res != nil {
 			return res
 		}
