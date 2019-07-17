@@ -13,6 +13,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func v(vers string) *Version {
+	return MustParse(vers)
+}
+
 func TestVersionComparator(t *testing.T) {
 	sign := map[int]string{1: ">", 0: "=", -1: "<"}
 	ascending := func(list ...*Version) {

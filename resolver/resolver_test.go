@@ -23,17 +23,17 @@ func d(dep string) *Dependency {
 	name := dep[0:1]
 	switch dep[1:3] {
 	case ">=":
-		return &Dependency{Name: name, Constraint: &GreaterThanOrEqualConstraint{Version: v(dep[3:])}}
+		return &Dependency{Name: name, Constraint: &semver.GreaterThanOrEqual{Version: v(dep[3:])}}
 	case "<=":
-		return &Dependency{Name: name, Constraint: &LessThanOrEqualConstraint{Version: v(dep[3:])}}
+		return &Dependency{Name: name, Constraint: &semver.LessThanOrEqual{Version: v(dep[3:])}}
 	}
 	switch dep[1:2] {
 	case "=":
-		return &Dependency{Name: name, Constraint: &EqualsConstraint{Version: v(dep[2:])}}
+		return &Dependency{Name: name, Constraint: &semver.Equals{Version: v(dep[2:])}}
 	case ">":
-		return &Dependency{Name: name, Constraint: &GreaterThanConstraint{Version: v(dep[2:])}}
+		return &Dependency{Name: name, Constraint: &semver.GreaterThan{Version: v(dep[2:])}}
 	case "<":
-		return &Dependency{Name: name, Constraint: &LessThanConstraint{Version: v(dep[2:])}}
+		return &Dependency{Name: name, Constraint: &semver.LessThan{Version: v(dep[2:])}}
 	case "^":
 		panic("'compatible with' operator not implemented: " + dep)
 		// return &Dependency{Name: name, Constraint: &CompatibleWithConstraint{Version: v(dep[2:])}}

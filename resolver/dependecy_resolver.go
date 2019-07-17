@@ -14,7 +14,7 @@ import (
 
 type Dependency struct {
 	Name       string
-	Constraint Constraint
+	Constraint semver.Constraint
 }
 
 func (d *Dependency) String() string {
