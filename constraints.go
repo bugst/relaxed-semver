@@ -14,6 +14,19 @@ type Constraint interface {
 	String() string
 }
 
+// True is the empty constraint
+type True struct {
+}
+
+// Match always return true
+func (t *True) Match(v *Version) bool {
+	return true
+}
+
+func (t *True) String() string {
+	return ""
+}
+
 // Equals is the equality (=) constraint
 type Equals struct {
 	Version *Version
