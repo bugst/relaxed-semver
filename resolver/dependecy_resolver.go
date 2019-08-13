@@ -32,6 +32,7 @@ func match(r Release, dep Dependency) bool {
 // Releases is a list of Release
 type Releases []Release
 
+// FilterBy return a subset of the Releases matching the provided Dependency
 func (set Releases) FilterBy(dep Dependency) Releases {
 	res := []Release{}
 	for _, r := range set {
@@ -42,10 +43,13 @@ func (set Releases) FilterBy(dep Dependency) Releases {
 	return res
 }
 
+// Archive contains all Releases set to consider for dependency resolution
 type Archive struct {
 	Releases map[string]Releases
 }
 
+// Resolve will try to depp-resolve dependencies from the Release passed as
+// arguent using a backtracking algorithm.
 func (ar *Archive) Resolve(release Release) []Release {
 	solution := map[string]Release{release.GetName(): release}
 	depsToProcess := release.GetDependencies()
