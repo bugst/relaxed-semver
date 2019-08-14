@@ -44,11 +44,11 @@ func TestConstraints(t *testing.T) {
 	require.True(t, gt.Match(v("2.0.0")))
 	require.Equal(t, ">1.3.0", gt.String())
 
-	t := &True{}
-	require.True(t, t.Match(v("1.0.0")))
-	require.True(t, t.Match(v("1.3.0")))
-	require.True(t, t.Match(v("2.0.0")))
-	require.Equal(t, "", t.String())
+	tr := &True{}
+	require.True(t, tr.Match(v("1.0.0")))
+	require.True(t, tr.Match(v("1.3.0")))
+	require.True(t, tr.Match(v("2.0.0")))
+	require.Equal(t, "", tr.String())
 
 	gt100 := &GreaterThan{v("1.0.0")}
 	lte200 := &LessThanOrEqual{v("2.0.0")}
