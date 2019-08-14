@@ -7,6 +7,7 @@
 package semver
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -68,4 +69,37 @@ func TestConstraints(t *testing.T) {
 	require.False(t, or.Match(v("2.0.0")))
 	require.True(t, or.Match(v("2.1.0")))
 	require.Equal(t, "(>2.0.0 || <=1.0.0)", or.String())
+}
+
+func TestConstraintsParser(t *testing.T) {
+	good := map[string]string{
+		"":         "",
+		"=1.3.0":   "=1.3.0",
+		" =1.3.0 ": "=1.3.0",
+		"=1.3.0 ":  "=1.3.0",
+		" =1.3.0":  "=1.3.0",
+		">=1.3.0":  ">=1.3.0",
+		">1.3.0":   ">1.3.0",
+		"<=1.3.0":  "<=1.3.0",
+		"<1.3.0":   "<1.3.0",
+	}
+	for s, r := range good {
+		p, err := ParseConstraint(s)
+		require.NoError(t, err)
+		require.Equal(t, r, p.String())
+		fmt.Printf("'%s' parsed as %s\n", s, p.String())
+	}
+	bad := []string{
+		"1.0.0",
+		"= 1.0.0",
+		">>1.0.0",
+		">1.0.0 =2.0.0",
+		">1.0.0 &",
+	}
+	for _, s := range bad {
+		p, err := ParseConstraint(s)
+		require.Nil(t, p)
+		require.Error(t, err)
+		fmt.Printf("'%s' parse error: %s\n", s, err)
+	}
 }

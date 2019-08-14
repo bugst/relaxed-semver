@@ -6,12 +6,108 @@
 
 package semver
 
+import (
+	"fmt"
+	"strings"
+)
+
 // Constraint is a condition that a Version can match or not
 type Constraint interface {
 	// Match returns true if the Version satisfies the condition
 	Match(*Version) bool
 
 	String() string
+}
+
+// ParseConstraint converts a string into a Constraint. The resulting Constraint
+// may be converted back to string using the String() method.
+// WIP: only simple constraint (like ""=1.2.0" or ">=2.0.0) are parsed for now
+// a full parser will be deployed in the future
+func ParseConstraint(in string) (Constraint, error) {
+	in = strings.TrimSpace(in)
+	curr := 0
+	l := len(in)
+	if l == 0 {
+		return &True{}, nil
+	}
+	next := func() byte {
+		if curr < l {
+			curr++
+			return in[curr-1]
+		}
+		return 0
+	}
+	peek := func() byte {
+		if curr < l {
+			return in[curr]
+		}
+		return 0
+	}
+
+	ver := func() (*Version, error) {
+		start := curr
+		for {
+			n := peek()
+			if !isIdentifier(n) && !isVersionSeparator(n) {
+				if start == curr {
+					return nil, fmt.Errorf("invalid version")
+				}
+				return Parse(in[start:curr])
+			}
+			curr++
+		}
+	}
+
+	stack := []Constraint{}
+	for {
+		switch next() {
+		case '=':
+			if v, err := ver(); err == nil {
+				stack = append(stack, &Equals{v})
+			} else {
+				return nil, err
+			}
+		case '>':
+			if peek() == '=' {
+				next()
+				if v, err := ver(); err == nil {
+					stack = append(stack, &GreaterThanOrEqual{v})
+				} else {
+					return nil, err
+				}
+			} else {
+				if v, err := ver(); err == nil {
+					stack = append(stack, &GreaterThan{v})
+				} else {
+					return nil, err
+				}
+			}
+		case '<':
+			if peek() == '=' {
+				next()
+				if v, err := ver(); err == nil {
+					stack = append(stack, &LessThanOrEqual{v})
+				} else {
+					return nil, err
+				}
+			} else {
+				if v, err := ver(); err == nil {
+					stack = append(stack, &LessThan{v})
+				} else {
+					return nil, err
+				}
+			}
+		case ' ':
+			// ignore
+		default:
+			return nil, fmt.Errorf("unexpected char at: %s", in[curr-1:])
+		case 0:
+			if len(stack) != 1 {
+				return nil, fmt.Errorf("invalid constraint: %s", in)
+			}
+			return stack[0], nil
+		}
+	}
 }
 
 // True is the empty constraint
