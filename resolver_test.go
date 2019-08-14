@@ -4,31 +4,25 @@
 // license that can be found in the LICENSE file.
 //
 
-package resolver
+package semver
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	semver "go.bug.st/relaxed-semver"
 )
-
-func v(vers string) *semver.Version {
-	return semver.MustParse(vers)
-}
 
 type customDep struct {
 	name string
-	cond semver.Constraint
+	cond Constraint
 }
 
 func (c *customDep) GetName() string {
 	return c.name
 }
 
-func (c *customDep) GetConstraint() semver.Constraint {
+func (c *customDep) GetConstraint() Constraint {
 	return c.cond
 }
 
@@ -38,7 +32,7 @@ func (c *customDep) String() string {
 
 type customRel struct {
 	name string
-	vers *semver.Version
+	vers *Version
 	deps []Dependency
 }
 
@@ -46,7 +40,7 @@ func (r *customRel) GetName() string {
 	return r.name
 }
 
-func (r *customRel) GetVersion() *semver.Version {
+func (r *customRel) GetVersion() *Version {
 	return r.vers
 }
 
@@ -62,17 +56,17 @@ func d(dep string) Dependency {
 	name := dep[0:1]
 	switch dep[1:3] {
 	case ">=":
-		return &customDep{name: name, cond: &semver.GreaterThanOrEqual{Version: v(dep[3:])}}
+		return &customDep{name: name, cond: &GreaterThanOrEqual{Version: v(dep[3:])}}
 	case "<=":
-		return &customDep{name: name, cond: &semver.LessThanOrEqual{Version: v(dep[3:])}}
+		return &customDep{name: name, cond: &LessThanOrEqual{Version: v(dep[3:])}}
 	}
 	switch dep[1:2] {
 	case "=":
-		return &customDep{name: name, cond: &semver.Equals{Version: v(dep[2:])}}
+		return &customDep{name: name, cond: &Equals{Version: v(dep[2:])}}
 	case ">":
-		return &customDep{name: name, cond: &semver.GreaterThan{Version: v(dep[2:])}}
+		return &customDep{name: name, cond: &GreaterThan{Version: v(dep[2:])}}
 	case "<":
-		return &customDep{name: name, cond: &semver.LessThan{Version: v(dep[2:])}}
+		return &customDep{name: name, cond: &LessThan{Version: v(dep[2:])}}
 	case "^":
 		panic("'compatible with' operator not implemented: " + dep)
 	default:

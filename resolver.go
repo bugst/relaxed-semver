@@ -4,24 +4,22 @@
 // license that can be found in the LICENSE file.
 //
 
-package resolver
+package semver
 
 import (
 	"fmt"
-
-	semver "go.bug.st/relaxed-semver"
 )
 
 // Dependency represents a dependency, it must provide methods to return Name and Constraints
 type Dependency interface {
 	GetName() string
-	GetConstraint() semver.Constraint
+	GetConstraint() Constraint
 }
 
 // Release represents a release, it must provide methods to return Name, Version and Dependencies
 type Release interface {
 	GetName() string
-	GetVersion() *semver.Version
+	GetVersion() *Version
 	GetDependencies() []Dependency
 }
 
