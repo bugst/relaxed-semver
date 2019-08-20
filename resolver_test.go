@@ -103,8 +103,6 @@ func TestResolver(t *testing.T) {
 	a111 := rel("A", "1.1.1", deps("B", "C=1.1.1"))
 	a120 := rel("A", "1.2.0", deps("B=1.2.0", "C>2.0.0"))
 
-	verbose = true
-
 	r1 := arch.Resolve(a100)
 	require.Len(t, r1, 3)
 	require.Contains(t, r1, a100)

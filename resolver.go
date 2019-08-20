@@ -6,10 +6,6 @@
 
 package semver
 
-import (
-	"fmt"
-)
-
 // Dependency represents a dependency, it must provide methods to return Name and Constraints
 type Dependency interface {
 	GetName() string
@@ -54,20 +50,8 @@ func (ar *Archive) Resolve(release Release) []Release {
 	return ar.resolve(solution, depsToProcess)
 }
 
-// To be redefined in Tests to increase output
-var verbose = false
-
 func (ar *Archive) resolve(solution map[string]Release, depsToProcess []Dependency) []Release {
-	debug := func(msg string) {}
-	if verbose {
-		debug = func(msg string) {
-			for i := 0; i < len(solution); i++ {
-				fmt.Print("   ")
-			}
-			fmt.Println(msg)
-		}
-	}
-	debug(fmt.Sprintf("deps to process: %s", depsToProcess))
+	debug("deps to process: %s", depsToProcess)
 	if len(depsToProcess) == 0 {
 		debug("All dependencies have been resolved.")
 		res := []Release{}
@@ -80,29 +64,29 @@ func (ar *Archive) resolve(solution map[string]Release, depsToProcess []Dependen
 	// Pick the first dependency in the deps to process
 	dep := depsToProcess[0]
 	depName := dep.GetName()
-	debug(fmt.Sprintf("Considering next dep: %s", dep))
+	debug("Considering next dep: %s", dep)
 
 	// If a release is already picked in the solution check if it match the dep
 	if existingRelease, has := solution[depName]; has {
 		if match(existingRelease, dep) {
-			debug(fmt.Sprintf("%s already in solution and matching", existingRelease))
+			debug("%s already in solution and matching", existingRelease)
 			return ar.resolve(solution, depsToProcess[1:])
 		}
-		debug(fmt.Sprintf("%s already in solution do not match... rollingback", existingRelease))
+		debug("%s already in solution do not match... rollingback", existingRelease)
 		return nil
 	}
 
 	// Otherwise start backtracking the dependency
 	releases := ar.Releases[dep.GetName()].FilterBy(dep)
-	debug(fmt.Sprintf("releases matching criteria: %s", releases))
+	debug("releases matching criteria: %s", releases)
 	for _, release := range releases {
-		debug(fmt.Sprintf("try with %s %s", release, release.GetDependencies()))
+		debug("try with %s %s", release, release.GetDependencies())
 		solution[depName] = release
 		res := ar.resolve(solution, append(depsToProcess[1:], release.GetDependencies()...))
 		if res != nil {
 			return res
 		}
-		debug(fmt.Sprintf("%s did not work...", release))
+		debug("%s did not work...", release)
 		delete(solution, depName)
 	}
 	return nil
