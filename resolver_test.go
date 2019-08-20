@@ -83,7 +83,7 @@ func TestResolver(t *testing.T) {
 	b100 := rel("B", "1.0.0", deps())
 	c200 := rel("C", "2.0.0", deps())
 	c120 := rel("C", "1.2.0", deps())
-	c111 := rel("C", "1.1.1", deps())
+	c111 := rel("C", "1.1.1", deps("B=1.1.1"))
 	c110 := rel("C", "1.1.0", deps())
 	c102 := rel("C", "1.0.2", deps())
 	c101 := rel("C", "1.0.1", deps())
@@ -100,6 +100,7 @@ func TestResolver(t *testing.T) {
 
 	a100 := rel("A", "1.0.0", deps("B>=1.2.0", "C>=2.0.0"))
 	a110 := rel("A", "1.1.0", deps("B=1.2.0", "C>=2.0.0"))
+	a111 := rel("A", "1.1.1", deps("B", "C=1.1.1"))
 	a120 := rel("A", "1.2.0", deps("B=1.2.0", "C>2.0.0"))
 
 	verbose = true
@@ -118,7 +119,14 @@ func TestResolver(t *testing.T) {
 	require.Contains(t, r2, c200)
 	fmt.Println(r2)
 
-	r3 := arch.Resolve(a120)
-	require.Nil(t, r3)
+	r3 := arch.Resolve(a111)
+	require.Len(t, r3, 3)
+	require.Contains(t, r3, a111)
+	require.Contains(t, r3, b111)
+	require.Contains(t, r3, c111)
 	fmt.Println(r3)
+
+	r4 := arch.Resolve(a120)
+	require.Nil(t, r4)
+	fmt.Println(r4)
 }
