@@ -54,24 +54,11 @@ func (r *customRel) String() string {
 
 func d(dep string) Dependency {
 	name := dep[0:1]
-	switch dep[1:3] {
-	case ">=":
-		return &customDep{name: name, cond: &GreaterThanOrEqual{Version: v(dep[3:])}}
-	case "<=":
-		return &customDep{name: name, cond: &LessThanOrEqual{Version: v(dep[3:])}}
+	cond, err := ParseConstraint(dep[1:])
+	if err != nil {
+		panic("invalid operator in dep: " + dep + " (" + err.Error() + ")")
 	}
-	switch dep[1:2] {
-	case "=":
-		return &customDep{name: name, cond: &Equals{Version: v(dep[2:])}}
-	case ">":
-		return &customDep{name: name, cond: &GreaterThan{Version: v(dep[2:])}}
-	case "<":
-		return &customDep{name: name, cond: &LessThan{Version: v(dep[2:])}}
-	case "^":
-		panic("'compatible with' operator not implemented: " + dep)
-	default:
-		panic("invalid operator in dep: " + dep)
-	}
+	return &customDep{name: name, cond: cond}
 }
 
 func deps(deps ...string) []Dependency {
