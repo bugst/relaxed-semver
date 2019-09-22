@@ -6,6 +6,8 @@
 
 package semver
 
+import "sort"
+
 // Dependency represents a dependency, it must provide methods to return Name and Constraints
 type Dependency interface {
 	GetName() string
@@ -35,6 +37,14 @@ func (set Releases) FilterBy(dep Dependency) Releases {
 		}
 	}
 	return res
+}
+
+// SortDescent sort the Releases in this set in descending order (the lastest
+// release is the first)
+func (set Releases) SortDescent() {
+	sort.Slice(set, func(i, j int) bool {
+		return set[i].GetVersion().GreaterThan(set[j].GetVersion())
+	})
 }
 
 // Archive contains all Releases set to consider for dependency resolution
@@ -78,6 +88,10 @@ func (ar *Archive) resolve(solution map[string]Release, depsToProcess []Dependen
 
 	// Otherwise start backtracking the dependency
 	releases := ar.Releases[dep.GetName()].FilterBy(dep)
+
+	// Consider the latest versions first
+	releases.SortDescent()
+
 	debug("releases matching criteria: %s", releases)
 	for _, release := range releases {
 		debug("try with %s %s", release, release.GetDependencies())

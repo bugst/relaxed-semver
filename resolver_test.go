@@ -90,11 +90,16 @@ func TestResolver(t *testing.T) {
 	c100 := rel("C", "1.0.0", deps())
 	c021 := rel("C", "0.2.1", deps())
 	c020 := rel("C", "0.2.0", deps())
-	c010 := rel("C", "0.1.0", deps())
+	c010 := rel("C", "0.1.0", deps("D"))
+	d100 := rel("D", "1.0.0", deps())
+	d120 := rel("D", "1.2.0", deps("E"))
+	e100 := rel("E", "1.0.0", deps())
 	arch := &Archive{
 		Releases: map[string]Releases{
 			"B": Releases{b131, b130, b121, b120, b111, b110, b100},
 			"C": Releases{c200, c120, c111, c110, c102, c101, c100, c021, c020, c010},
+			"D": Releases{d100, d120},
+			"E": Releases{e100},
 		},
 	}
 
@@ -127,4 +132,10 @@ func TestResolver(t *testing.T) {
 	r4 := arch.Resolve(a120)
 	require.Nil(t, r4)
 	fmt.Println(r4)
+
+	r5 := arch.Resolve(c010)
+	require.Contains(t, r5, c010)
+	require.Contains(t, r5, d120)
+	require.Contains(t, r5, e100)
+	fmt.Println(r5)
 }
