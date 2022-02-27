@@ -96,10 +96,10 @@ func TestResolver(t *testing.T) {
 	e100 := rel("E", "1.0.0", deps())
 	arch := &Archive{
 		Releases: map[string]Releases{
-			"B": Releases{b131, b130, b121, b120, b111, b110, b100},
-			"C": Releases{c200, c120, c111, c110, c102, c101, c100, c021, c020, c010},
-			"D": Releases{d100, d120},
-			"E": Releases{e100},
+			"B": {b131, b130, b121, b120, b111, b110, b100},
+			"C": {c200, c120, c111, c110, c102, c101, c100, c021, c020, c010},
+			"D": {d100, d120},
+			"E": {e100},
 		},
 	}
 
