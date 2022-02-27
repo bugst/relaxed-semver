@@ -69,6 +69,14 @@ func TestConstraints(t *testing.T) {
 	require.False(t, or.Match(v("2.0.0")))
 	require.True(t, or.Match(v("2.1.0")))
 	require.Equal(t, "(>2.0.0 || <=1.0.0)", or.String())
+
+	notOr := &Not{or}
+	require.False(t, notOr.Match(v("0.9.0")))
+	require.False(t, notOr.Match(v("1.0.0")))
+	require.True(t, notOr.Match(v("1.3.0")))
+	require.True(t, notOr.Match(v("2.0.0")))
+	require.False(t, notOr.Match(v("2.1.0")))
+	require.Equal(t, "!(>2.0.0 || <=1.0.0)", notOr.String())
 }
 
 func TestConstraintsParser(t *testing.T) {

@@ -246,3 +246,21 @@ func (and *And) String() string {
 	res += ")"
 	return res
 }
+
+// Not match if Operand does not match and viceversa
+type Not struct {
+	Operand Constraint
+}
+
+// Match returns ture if v does NOT satisfies the condition
+func (not *Not) Match(v *Version) bool {
+	return !not.Operand.Match(v)
+}
+
+func (not *Not) String() string {
+	op := not.Operand.String()
+	if op[0] != '(' {
+		return "!(" + op + ")"
+	}
+	return "!" + op
+}
