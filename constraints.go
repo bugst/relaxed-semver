@@ -21,8 +21,6 @@ type Constraint interface {
 
 // ParseConstraint converts a string into a Constraint. The resulting Constraint
 // may be converted back to string using the String() method.
-// WIP: only simple constraint (like ""=1.2.0" or ">=2.0.0) are parsed for now
-// a full parser will be deployed in the future
 func ParseConstraint(in string) (Constraint, error) {
 	in = strings.TrimSpace(in)
 	curr := 0
@@ -37,6 +35,11 @@ func ParseConstraint(in string) (Constraint, error) {
 		}
 		return 0
 	}
+	skipSpace := func() {
+		for curr < l && in[curr] == ' ' {
+			curr++
+		}
+	}
 	peek := func() byte {
 		if curr < l {
 			return in[curr]
@@ -44,7 +47,7 @@ func ParseConstraint(in string) (Constraint, error) {
 		return 0
 	}
 
-	ver := func() (*Version, error) {
+	version := func() (*Version, error) {
 		start := curr
 		for {
 			n := peek()
@@ -58,56 +61,134 @@ func ParseConstraint(in string) (Constraint, error) {
 		}
 	}
 
-	stack := []Constraint{}
-	for {
+	var terminal func() (Constraint, error)
+	var constraint func() (Constraint, error)
+
+	terminal = func() (Constraint, error) {
+		skipSpace()
 		switch next() {
-		case '=':
-			if v, err := ver(); err == nil {
-				stack = append(stack, &Equals{v})
-			} else {
+		case '!':
+			expr, err := terminal()
+			if err != nil {
 				return nil, err
 			}
+			return &Not{expr}, nil
+		case '(':
+			expr, err := constraint()
+			if err != nil {
+				return nil, err
+			}
+			skipSpace()
+			if c := next(); c != ')' {
+				return nil, fmt.Errorf("unexpected char at: %s", in[curr-1:])
+			}
+			return expr, nil
+		case '=':
+			v, err := version()
+			if err != nil {
+				return nil, err
+			}
+			return &Equals{v}, nil
 		case '>':
 			if peek() == '=' {
 				next()
-				if v, err := ver(); err == nil {
-					stack = append(stack, &GreaterThanOrEqual{v})
-				} else {
+				v, err := version()
+				if err != nil {
 					return nil, err
 				}
+				return &GreaterThanOrEqual{v}, nil
 			} else {
-				if v, err := ver(); err == nil {
-					stack = append(stack, &GreaterThan{v})
-				} else {
+				v, err := version()
+				if err != nil {
 					return nil, err
 				}
+				return &GreaterThan{v}, nil
 			}
 		case '<':
 			if peek() == '=' {
 				next()
-				if v, err := ver(); err == nil {
-					stack = append(stack, &LessThanOrEqual{v})
-				} else {
+				v, err := version()
+				if err != nil {
 					return nil, err
 				}
+				return &LessThanOrEqual{v}, nil
 			} else {
-				if v, err := ver(); err == nil {
-					stack = append(stack, &LessThan{v})
-				} else {
+				v, err := version()
+				if err != nil {
 					return nil, err
 				}
+				return &LessThan{v}, nil
 			}
-		case ' ':
-			// ignore
 		default:
 			return nil, fmt.Errorf("unexpected char at: %s", in[curr-1:])
-		case 0:
-			if len(stack) != 1 {
-				return nil, fmt.Errorf("invalid constraint: %s", in)
-			}
-			return stack[0], nil
 		}
 	}
+
+	andExpr := func() (Constraint, error) {
+		t1, err := terminal()
+		if err != nil {
+			return nil, err
+		}
+		stack := []Constraint{t1}
+
+		for {
+			skipSpace()
+			if peek() != '&' {
+				if len(stack) == 1 {
+					return stack[0], nil
+				}
+				return &And{stack}, nil
+			}
+			next()
+			if peek() != '&' {
+				return nil, fmt.Errorf("unexpected char at: %s", in[curr-1:])
+			}
+			next()
+
+			t2, err := terminal()
+			if err != nil {
+				return nil, err
+			}
+			stack = append(stack, t2)
+		}
+	}
+
+	constraint = func() (Constraint, error) {
+		t1, err := andExpr()
+		if err != nil {
+			return nil, err
+		}
+		stack := []Constraint{t1}
+
+		for {
+			skipSpace()
+			switch peek() {
+			case '|':
+				next()
+				if peek() != '|' {
+					return nil, fmt.Errorf("unexpected char at: %s", in[curr-1:])
+				}
+				next()
+
+				t2, err := andExpr()
+				if err != nil {
+					return nil, err
+				}
+				stack = append(stack, t2)
+
+			case 0, ')':
+				if len(stack) == 1 {
+					return stack[0], nil
+				}
+				return &Or{stack}, nil
+
+			default:
+				return nil, fmt.Errorf("unexpected char at: %s", in[curr-1:])
+			}
+		}
+	}
+
+	return constraint()
 }
 
 // True is the empty constraint
@@ -259,7 +340,7 @@ func (not *Not) Match(v *Version) bool {
 
 func (not *Not) String() string {
 	op := not.Operand.String()
-	if op[0] != '(' {
+	if op == "" || op[0] != '(' {
 		return "!(" + op + ")"
 	}
 	return "!" + op

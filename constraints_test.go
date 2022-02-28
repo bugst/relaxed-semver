@@ -80,23 +80,41 @@ func TestConstraints(t *testing.T) {
 }
 
 func TestConstraintsParser(t *testing.T) {
-	good := map[string]string{
-		"":         "",
-		"=1.3.0":   "=1.3.0",
-		" =1.3.0 ": "=1.3.0",
-		"=1.3.0 ":  "=1.3.0",
-		" =1.3.0":  "=1.3.0",
-		">=1.3.0":  ">=1.3.0",
-		">1.3.0":   ">1.3.0",
-		"<=1.3.0":  "<=1.3.0",
-		"<1.3.0":   "<1.3.0",
+	type goodStringTest struct {
+		In, Out string
 	}
-	for s, r := range good {
-		p, err := ParseConstraint(s)
-		require.NoError(t, err)
-		require.Equal(t, r, p.String())
-		fmt.Printf("'%s' parsed as %s\n", s, p.String())
+	good := []goodStringTest{
+		{"", ""}, // always true
+		{"=1.3.0", "=1.3.0"},
+		{" =1.3.0 ", "=1.3.0"},
+		{"=1.3.0 ", "=1.3.0"},
+		{" =1.3.0", "=1.3.0"},
+		{">=1.3.0", ">=1.3.0"},
+		{">1.3.0", ">1.3.0"},
+		{"<=1.3.0", "<=1.3.0"},
+		{"<1.3.0", "<1.3.0"},
+		{"(=1.4.0)", "=1.4.0"},
+		{"!(=1.4.0)", "!(=1.4.0)"},
+		{"!(((=1.4.0)))", "!(=1.4.0)"},
+		{"=1.2.4 && =1.3.0", "(=1.2.4 && =1.3.0)"},
+		{"=1.2.4 && =1.3.0 && =1.2.0", "(=1.2.4 && =1.3.0 && =1.2.0)"},
+		{"=1.2.4 && =1.3.0 || =1.2.0", "((=1.2.4 && =1.3.0) || =1.2.0)"},
+		{"=1.2.4 || =1.3.0 && =1.2.0", "(=1.2.4 || (=1.3.0 && =1.2.0))"},
+		{"(=1.2.4 || =1.3.0) && =1.2.0", "((=1.2.4 || =1.3.0) && =1.2.0)"},
+		{"(=1.2.4 || !>1.3.0) && =1.2.0", "((=1.2.4 || !(>1.3.0)) && =1.2.0)"},
+		{"!(=1.2.4 || >1.3.0) && =1.2.0", "(!(=1.2.4 || >1.3.0) && =1.2.0)"},
 	}
+	for i, test := range good {
+		in := test.In
+		out := test.Out
+		t.Run(fmt.Sprintf("GoodString%03d", i), func(t *testing.T) {
+			p, err := ParseConstraint(in)
+			require.NoError(t, err, "error parsing %s", in)
+			require.Equal(t, out, p.String())
+			fmt.Printf("'%s' parsed as %s\n", in, p.String())
+		})
+	}
+
 	bad := []string{
 		"1.0.0",
 		"= 1.0.0",
@@ -107,11 +125,20 @@ func TestConstraintsParser(t *testing.T) {
 		">>1.0.0",
 		">1.0.0 =2.0.0",
 		">1.0.0 &",
+		"!1.0.0",
+		">1.0.0 && 2.0.0",
+		">1.0.0 | =2.0.0",
+		"(>1.0.0 | =2.0.0)",
+		"(>1.0.0 || =2.0.0",
+		">1.0.0 || 2.0.0",
 	}
-	for _, s := range bad {
-		p, err := ParseConstraint(s)
-		require.Nil(t, p)
-		require.Error(t, err)
-		fmt.Printf("'%s' parse error: %s\n", s, err)
+	for i, s := range bad {
+		in := s
+		t.Run(fmt.Sprintf("BadString%03d", i), func(t *testing.T) {
+			p, err := ParseConstraint(in)
+			require.Nil(t, p)
+			require.Error(t, err)
+			fmt.Printf("'%s' parse error: %s\n", in, err)
+		})
 	}
 }
