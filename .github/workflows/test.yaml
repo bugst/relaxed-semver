@@ -1,0 +1,42 @@
+name: test
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  unit-test:
+    strategy:
+      matrix:
+        os: [windows-latest, macOS-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-go@v1
+        with:
+          go-version: "1.17"
+      - name: Build native
+        run: GOARCH=amd64 go build -v ./...
+        shell: bash
+      - name: Run unit tests
+        run: go test -v -race ./...
+        shell: bash
+
+  unit-test-with-coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-go@v1
+        with:
+          go-version: "1.17"
+      - name: Run unit tests with coverage
+        run: go test -v -race -covermode=atomic -coverprofile=coverage.out ./...
+        shell: bash
+      - uses: codecov/codecov-action@v2
+        with:
+          verbose: true
