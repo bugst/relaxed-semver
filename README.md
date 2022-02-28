@@ -1,6 +1,4 @@
-
-
-# go.bug.st/relaxed-semver [![build status](https://api.travis-ci.org/bugst/relaxed-semver.svg?branch=master)](https://travis-ci.org/bugst/relaxed-semver) [![codecov](https://codecov.io/gh/bugst/relaxed-semver/branch/master/graph/badge.svg)](https://codecov.io/gh/bugst/relaxed-semver)
+# go.bug.st/relaxed-semver [![build status](https://github.com/bugst/relaxed-semver/workflows/test/badge.svg)](https://travis-ci.org/bugst/relaxed-semver) [![codecov](https://codecov.io/gh/bugst/relaxed-semver/branch/master/graph/badge.svg)](https://codecov.io/gh/bugst/relaxed-semver)
 
 A library for handling a superset of semantic versioning in golang.
 
@@ -12,9 +10,10 @@ See the godoc here: https://godoc.org/go.bug.st/relaxed-semver
 
 This library tries to implement the semantic versioning specification [2.0.0](https://semver.org/spec/v2.0.0.html) with an exception: the numeric format `major.minor.patch` like `1.3.2` may be truncated if a number is zero, so:
 
-   - `1.2.0` or `1.2.0-beta` may be written as `1.2` or `1.2-beta` respectively
-   - `1.0.0` or `1.0.0-beta` may be written `1` or `1-beta` respectively
-   - `0.0.0` may be written as the **empty string**, but `0.0.0-beta` may **not** be written as `-beta`
+- `1.2.0` or `1.2.0-beta` may be written as `1.2` or `1.2-beta` respectively
+- `1.0.0` or `1.0.0-beta` may be written `1` or `1-beta` respectively
+- `0.0.0` may be written as the **empty string**, but `0.0.0-beta` may **not** be written as `-beta`
+
 ## Usage
 
 You can parse a semver version string with the `Parse` function that returns a `Version` object that can be used to be compared with other `Version` objects using the `CompareTo`, `LessThan` , `LessThanOrEqual`, `Equal`, `GreaterThan` and `GreaterThanOrEqual` methods.
