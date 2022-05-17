@@ -32,6 +32,47 @@ The `RelaxedVersion` object is basically made to allow systems that do not use s
 
 To parse a `RelaxedVersion` you can use the `ParseRelaxed` function.
 
+## Version constraints
+
+Dependency version matching can be specified via version constraints, which might be a version range or an exact version.
+
+The following operators are supported:
+
+|          |                          |
+| -------- | ------------------------ |
+| `=`      | equal to                 |
+| `>`      | greater than             |
+| `>=`     | greater than or equal to |
+| `<`      | less than                |
+| `<=`     | less than or equal to    |
+| `!`      | NOT                      |
+| `&&`     | AND                      |
+| `\|\|`   | OR                       |
+| `(`, `)` | constraint group         |
+
+### Examples
+
+Given the following releases of a dependency:
+
+- `0.1.0`
+- `1.0.0`
+- `2.0.0`
+- `2.1.0`
+
+constraints would resolve as follows:
+
+| Constraint                       | Resolution |
+| -------------------------------- | ---------- |
+| `=1.0.0`                         | `1.0.0`    |
+| `>1.0.0`                         | `2.1.0`    |
+| `>=1.0.0`                        | `2.1.0`    |
+| `<2.0.0`                         | `1.0.0`    |
+| `<=2.0.0`                        | `2.0.0`    |
+| `!=1.0.0`                        | `2.1.0`    |
+| `>1.0.0 && <2.1.0`               | `2.0.0`    |
+| `<1.0.0 \|\| >2.0.0`             | `2.1.0`    |
+| `(>0.1.0 && <2.0.0) \|\| >2.1.0` | `1.0.0`    |
+
 ## Json parsable
 
 The `Version` and `RelaxedVersion` have the JSON un/marshaler implemented so they can be JSON decoded/encoded.
