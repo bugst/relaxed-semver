@@ -39,20 +39,22 @@ To parse a `RelaxedVersion` you can use the `ParseRelaxed` function.
 
 Dependency version matching can be specified via version constraints, which might be a version range or an exact version.
 
-The following operators are supported:
+The following range operators are supported:
 
-|          |                          |
-| -------- | ------------------------ |
-| `=`      | equal to                 |
-| `>`      | greater than             |
-| `>=`     | greater than or equal to |
-| `<`      | less than                |
-| `<=`     | less than or equal to    |
-| `^`      | compatible-with          |
-| `!`      | NOT                      |
-| `&&`     | AND                      |
-| `\|\|`   | OR                       |
-| `(`, `)` | constraint group         |
+| Operator    | Meaning                  |
+| ----------- | ------------------------ |
+| `^` or None | compatible-with          |
+| `=`         | equal to                 |
+| `>`         | greater than             |
+| `>=`        | greater than or equal to |
+| `<`         | less than                |
+| `<=`        | less than or equal to    |
+| `!`         | NOT                      |
+| `&&`        | AND                      |
+| `\|\|`      | OR                       |
+| `(`, `)`    | constraint group         |
+
+In a constraint if a version is written without the operator the "compatible-with" operator is applied.
 
 ### Examples
 
@@ -82,6 +84,8 @@ constraints conditions would match as follows:
 | `<1.0.0 \|\| >2.0.0`             | `0.1.0`, `0.1.1`, `0.2.0`, `2.0.5`, `2.0.6`, `2.1.0`, `3.0.0`          |
 | `(>0.1.0 && <2.0.0) \|\| >2.0.5` | `0.1.1`, `0.2.0`, `1.0.0`, `2.0.6`, `2.1.0`, `3.0.0`                   |
 | `^2.0.5`                         | `2.0.5`, `2.0.6`, `2.1.0`                                              |
+| `2.0.5`                          | `2.0.5`, `2.0.6`, `2.1.0`  (same as `^2.0.5`)                          |
+| `2.0.5 && !=2.0.6`               | `2.0.5`, `2.1.0`  (same as `^2.0.5 && !=2.0.6`)                        |
 | `^0.1.0`                         | `0.1.0`, `0.1.1`                                                       |
 
 ## Json parsable

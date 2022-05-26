@@ -57,7 +57,7 @@ func ParseConstraint(in string) (Constraint, error) {
 				}
 				return Parse(in[start:curr])
 			}
-			curr++
+			next()
 		}
 	}
 
@@ -66,14 +66,16 @@ func ParseConstraint(in string) (Constraint, error) {
 
 	terminal = func() (Constraint, error) {
 		skipSpace()
-		switch next() {
+		switch peek() {
 		case '!':
+			next()
 			expr, err := terminal()
 			if err != nil {
 				return nil, err
 			}
 			return &Not{expr}, nil
 		case '(':
+			next()
 			expr, err := constraint()
 			if err != nil {
 				return nil, err
@@ -84,18 +86,21 @@ func ParseConstraint(in string) (Constraint, error) {
 			}
 			return expr, nil
 		case '=':
+			next()
 			v, err := version()
 			if err != nil {
 				return nil, err
 			}
 			return &Equals{v}, nil
 		case '^':
+			next()
 			v, err := version()
 			if err != nil {
 				return nil, err
 			}
 			return &CompatibleWith{v}, nil
 		case '>':
+			next()
 			if peek() == '=' {
 				next()
 				v, err := version()
@@ -111,6 +116,7 @@ func ParseConstraint(in string) (Constraint, error) {
 				return &GreaterThan{v}, nil
 			}
 		case '<':
+			next()
 			if peek() == '=' {
 				next()
 				v, err := version()
@@ -126,7 +132,11 @@ func ParseConstraint(in string) (Constraint, error) {
 				return &LessThan{v}, nil
 			}
 		default:
-			return nil, fmt.Errorf("unexpected char at: %s", in[curr-1:])
+			v, err := version()
+			if err != nil {
+				return nil, err
+			}
+			return &CompatibleWith{v}, nil
 		}
 	}
 
