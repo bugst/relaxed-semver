@@ -52,7 +52,7 @@ func ParseConstraint(in string) (Constraint, error) {
 			n := peek()
 			if !isIdentifier(n) && !isVersionSeparator(n) {
 				if start == curr {
-					return nil, fmt.Errorf("invalid version")
+					return nil, fmt.Errorf("invalid version: unexpected char '%c'", rune(n))
 				}
 				return Parse(in[start:curr])
 			}
@@ -79,7 +79,7 @@ func ParseConstraint(in string) (Constraint, error) {
 			}
 			skipSpace()
 			if c := next(); c != ')' {
-				return nil, fmt.Errorf("unexpected char at: %s", in[curr-1:])
+				return nil, fmt.Errorf("unexpected char: %c", rune(c))
 			}
 			return expr, nil
 		case '=':
