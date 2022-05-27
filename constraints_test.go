@@ -76,6 +76,19 @@ func TestConstraints(t *testing.T) {
 	require.True(t, notOr.Match(v("2.0.0")))
 	require.False(t, notOr.Match(v("2.1.0")))
 	require.Equal(t, "!(>2.0.0 || <=1.0.0)", notOr.String())
+
+	comp := &CompatibleWith{v("1.3.4-rc.3")}
+	require.False(t, comp.Match(v("1.2.3")))
+	require.False(t, comp.Match(v("1.3.2")))
+	require.False(t, comp.Match(v("1.2.3")))
+	require.False(t, comp.Match(v("1.3.4-rc.1")))
+	require.True(t, comp.Match(v("1.3.4-rc.5")))
+	require.True(t, comp.Match(v("1.3.4")))
+	require.True(t, comp.Match(v("1.3.6")))
+	require.True(t, comp.Match(v("1.4.0")))
+	require.True(t, comp.Match(v("1.4.5")))
+	require.True(t, comp.Match(v("1.4.5-rc.2")))
+	require.False(t, comp.Match(v("2.0.0")))
 }
 
 func TestConstraintsParser(t *testing.T) {
@@ -92,10 +105,15 @@ func TestConstraintsParser(t *testing.T) {
 		{">1.3.0", ">1.3.0"},
 		{"<=1.3.0", "<=1.3.0"},
 		{"<1.3.0", "<1.3.0"},
+		{"^1.3.0", "^1.3.0"},
+		{" ^1.3.0", "^1.3.0"},
+		{"^1.3.0 ", "^1.3.0"},
+		{" ^1.3.0 ", "^1.3.0"},
 		{"(=1.4.0)", "=1.4.0"},
 		{"!(=1.4.0)", "!(=1.4.0)"},
 		{"!(((=1.4.0)))", "!(=1.4.0)"},
 		{"=1.2.4 && =1.3.0", "(=1.2.4 && =1.3.0)"},
+		{"=1.2.4 && ^1.3.0", "(=1.2.4 && ^1.3.0)"},
 		{"=1.2.4 && =1.3.0 && =1.2.0", "(=1.2.4 && =1.3.0 && =1.2.0)"},
 		{"=1.2.4 && =1.3.0 || =1.2.0", "((=1.2.4 && =1.3.0) || =1.2.0)"},
 		{"=1.2.4 || =1.3.0 && =1.2.0", "(=1.2.4 || (=1.3.0 && =1.2.0))"},
@@ -124,6 +142,7 @@ func TestConstraintsParser(t *testing.T) {
 		">>1.0.0",
 		">1.0.0 =2.0.0",
 		">1.0.0 &",
+		"^1.1.1.1",
 		"!1.0.0",
 		">1.0.0 && 2.0.0",
 		">1.0.0 | =2.0.0",

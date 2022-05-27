@@ -286,7 +286,7 @@ type CompatibleWith struct {
 
 // Match returns true if v satisfies the condition
 func (cw *CompatibleWith) Match(v *Version) bool {
-	return v.CompatibleWith(cw.Version)
+	return cw.Version.CompatibleWith(v)
 }
 
 func (cw *CompatibleWith) String() string {
