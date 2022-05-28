@@ -62,3 +62,23 @@ func TestJSONParseRelaxedVersion(t *testing.T) {
 	err = json.Unmarshal([]byte(`123`), &u)
 	require.Error(t, err)
 }
+
+func BenchmarkJSONDecoding(b *testing.B) {
+	testVersion := "1.2.3-aaa.4.5.6+bbb.7.8.9"
+	v, _ := Parse(testVersion)
+	data, _ := json.Marshal(v)
+	var u Version
+	for i := 0; i < b.N; i++ {
+		json.Unmarshal(data, &u)
+	}
+}
+
+func BenchmarkJSONDecodingRelaxed(b *testing.B) {
+	testVersion := "1.2.3-aaa.4.5.6+bbb.7.8.9"
+	v := ParseRelaxed(testVersion)
+	data, _ := json.Marshal(v)
+	var u RelaxedVersion
+	for i := 0; i < b.N; i++ {
+		json.Unmarshal(data, &u)
+	}
+}
