@@ -81,3 +81,11 @@ func (v *RelaxedVersion) GreaterThan(u *RelaxedVersion) bool {
 func (v *RelaxedVersion) GreaterThanOrEqual(u *RelaxedVersion) bool {
 	return v.CompareTo(u) >= 0
 }
+
+// CompatibleWith returns true if the RelaxedVersion is compatible with the RelaxedVersion passed as paramater
+func (v *RelaxedVersion) CompatibleWith(u *RelaxedVersion) bool {
+	if v.version != nil && u.version != nil {
+		return v.version.CompatibleWith(u.version)
+	}
+	return v.Equal(u)
+}
