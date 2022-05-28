@@ -9,6 +9,7 @@ import (
 	"fmt"
 	rtdebug "runtime/debug"
 	"strings"
+	"testing"
 )
 
 func init() {
@@ -24,4 +25,8 @@ func init() {
 			fmt.Println(format)
 		}
 	}
+}
+
+func TestNoopDebug(t *testing.T) {
+	noopDebug("just for coverage!")
 }

@@ -5,4 +5,6 @@
 
 package semver
 
-var debug = func(format string, a ...interface{}) {}
+var debug = noopDebug
+
+func noopDebug(format string, a ...interface{}) {}
