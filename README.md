@@ -4,7 +4,7 @@ A library for handling a superset of semantic versioning in golang.
 
 ## Documentation and examples
 
-See the godoc here: https://godoc.org/go.bug.st/relaxed-semver
+See the godoc here: <https://godoc.org/go.bug.st/relaxed-semver>
 
 ## Semantic versioning specification followed in this library
 
