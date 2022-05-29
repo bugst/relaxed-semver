@@ -91,6 +91,39 @@ func TestRelaxedVersionComparator(t *testing.T) {
 	)
 }
 
+func TestRelaxedCompatibleWith(t *testing.T) {
+	inv := ParseRelaxed("invalid-semver")
+	inv2 := ParseRelaxed("invalid-semver-2")
+	v145 := ParseRelaxed("1.4.5")
+	v152 := ParseRelaxed("1.5.2")
+	v213 := ParseRelaxed("2.1.3")
+	require.True(t, inv.CompatibleWith(inv))
+	require.False(t, inv.CompatibleWith(inv2))
+	require.False(t, inv.CompatibleWith(v145))
+	require.False(t, inv.CompatibleWith(v152))
+	require.False(t, inv.CompatibleWith(v213))
+	require.False(t, inv2.CompatibleWith(inv))
+	require.True(t, inv2.CompatibleWith(inv2))
+	require.False(t, inv2.CompatibleWith(v145))
+	require.False(t, inv2.CompatibleWith(v152))
+	require.False(t, inv2.CompatibleWith(v213))
+	require.False(t, v145.CompatibleWith(inv))
+	require.False(t, v145.CompatibleWith(inv2))
+	require.True(t, v145.CompatibleWith(v145))
+	require.True(t, v145.CompatibleWith(v152))
+	require.False(t, v145.CompatibleWith(v213))
+	require.False(t, v152.CompatibleWith(inv))
+	require.False(t, v152.CompatibleWith(inv2))
+	require.False(t, v152.CompatibleWith(v145))
+	require.True(t, v152.CompatibleWith(v152))
+	require.False(t, v152.CompatibleWith(v213))
+	require.False(t, v213.CompatibleWith(inv))
+	require.False(t, v213.CompatibleWith(inv2))
+	require.False(t, v213.CompatibleWith(v145))
+	require.False(t, v213.CompatibleWith(v152))
+	require.True(t, v213.CompatibleWith(v213))
+}
+
 func TestNilRelaxedVersionString(t *testing.T) {
 	var nilVersion *RelaxedVersion
 	require.Equal(t, "", nilVersion.String())

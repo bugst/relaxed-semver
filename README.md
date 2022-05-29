@@ -27,6 +27,9 @@ This library allows the use of an even more relaxed semver specification using t
 - If the parsed string is a valid semver (following the rules above), then the `RelaxedVersion` will behave exactly as a normal `Version` object
 - if the parsed string is **not** a valid semver, then the string is kept as-is inside the `RelaxedVersion` object as a custom version string
 - when comparing two `RelaxedVersion` the rule is simple: if both are valid semver, the semver rules applies; if both are custom version string they are compared as alphanumeric strings; if one is valid semver and the other is a custom version string the valid semver is always greater
+- two `RelaxedVersion` are compatible (by the `CompatibleWith` operation) only if
+  - they are equal
+  - they are both valid semver and they are compatible as per semver specification
 
 The `RelaxedVersion` object is basically made to allow systems that do not use semver to soft transition to semantic versioning, because it allows an intermediate period where the invalid version is still tolerated.
 
@@ -45,6 +48,7 @@ The following operators are supported:
 | `>=`     | greater than or equal to |
 | `<`      | less than                |
 | `<=`     | less than or equal to    |
+| `^`      | compatible-with          |
 | `!`      | NOT                      |
 | `&&`     | AND                      |
 | `\|\|`   | OR                       |
@@ -55,23 +59,30 @@ The following operators are supported:
 Given the following releases of a dependency:
 
 - `0.1.0`
+- `0.1.1`
+- `0.2.0`
 - `1.0.0`
 - `2.0.0`
+- `2.0.5`
+- `2.0.6`
 - `2.1.0`
+- `3.0.0`
 
-constraints would resolve as follows:
+constraints conditions would match as follows:
 
-| Constraint                       | Resolution |
-| -------------------------------- | ---------- |
-| `=1.0.0`                         | `1.0.0`    |
-| `>1.0.0`                         | `2.1.0`    |
-| `>=1.0.0`                        | `2.1.0`    |
-| `<2.0.0`                         | `1.0.0`    |
-| `<=2.0.0`                        | `2.0.0`    |
-| `!=1.0.0`                        | `2.1.0`    |
-| `>1.0.0 && <2.1.0`               | `2.0.0`    |
-| `<1.0.0 \|\| >2.0.0`             | `2.1.0`    |
-| `(>0.1.0 && <2.0.0) \|\| >2.1.0` | `1.0.0`    |
+| The following condition...       | will match with versions...                          |
+| -------------------------------- | ---------------------------------------------------- |
+| `=1.0.0`                         | `1.0.0`                                              |
+| `>1.0.0`                         | `2.0.0`, `2.0.5`, `2.0.6`, `2.1.0`, `3.0.0`          |
+| `>=1.0.0`                        | `1.0.0`, `2.0.0`, `2.0.5`, `2.0.6`, `2.1.0`, `3.0.0` |
+| `<2.0.0`                         | `0.1.0`, `0.1.1`, `0.2.0`, `1.0.0`                   |
+| `<=2.0.0`                        | `0.1.0`, `0.1.1`, `0.2.0`, `1.0.0`, `2.0.0`          |
+| `!=1.0.0`                        | `0.1.0`, `2.0.0`, `2.0.5`, `2.0.6`, `2.1.0`, `3.0.0` |
+| `>1.0.0 && <2.1.0`               | `2.0.0`, `2.0.5`, `2.0.6`                            |
+| `<1.0.0 \|\| >2.0.0`             | `0.1.0`, `2.0.5`, `2.0.6`, `2.1.0`, `3.0.0`          |
+| `(>0.1.0 && <2.0.0) \|\| >2.0.5` | `1.0.0`, `2.0.6`, `2.1.0`, `3.0.0`                   |
+| `^2.0.5`                         | `2.0.5`, `2.0.6`, `2.1.0`                            |
+| `^0.1.0`                         | `0.1.0`, `0.1.1`                                     |
 
 ## Json parsable
 

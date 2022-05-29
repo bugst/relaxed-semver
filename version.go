@@ -205,3 +205,17 @@ func (v *Version) GreaterThan(u *Version) bool {
 func (v *Version) GreaterThanOrEqual(u *Version) bool {
 	return v.CompareTo(u) >= 0
 }
+
+// CompatibleWith returns true if the Version is compatible with the version passed as paramater
+func (v *Version) CompatibleWith(u *Version) bool {
+	if !u.GreaterThanOrEqual(v) {
+		return false
+	}
+	if v.major[0] != '0' {
+		return compareNumber(u.major, v.major) == 0
+	} else if v.minor[0] != '0' {
+		return compareNumber(u.major, v.major) == 0 && compareNumber(u.minor, v.minor) == 0
+	} else {
+		return compareNumber(u.major, v.major) == 0 && compareNumber(u.minor, v.minor) == 0 && compareNumber(u.patch, v.patch) == 0
+	}
+}

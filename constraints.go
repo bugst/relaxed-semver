@@ -88,6 +88,12 @@ func ParseConstraint(in string) (Constraint, error) {
 				return nil, err
 			}
 			return &Equals{v}, nil
+		case '^':
+			v, err := version()
+			if err != nil {
+				return nil, err
+			}
+			return &CompatibleWith{v}, nil
 		case '>':
 			if peek() == '=' {
 				next()
@@ -271,6 +277,20 @@ func (gte *GreaterThanOrEqual) Match(v *Version) bool {
 
 func (gte *GreaterThanOrEqual) String() string {
 	return ">=" + gte.Version.String()
+}
+
+// CompatibleWith is the "compatible with" (^) constraint
+type CompatibleWith struct {
+	Version *Version
+}
+
+// Match returns true if v satisfies the condition
+func (cw *CompatibleWith) Match(v *Version) bool {
+	return cw.Version.CompatibleWith(v)
+}
+
+func (cw *CompatibleWith) String() string {
+	return "^" + cw.Version.String()
 }
 
 // Or will match if ANY of the Operands Constraint will match
