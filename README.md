@@ -87,3 +87,7 @@ constraints conditions would match as follows:
 ## Json parsable
 
 The `Version` and `RelaxedVersion` have the JSON un/marshaler implemented so they can be JSON decoded/encoded.
+
+## Binary/GOB encoding support
+
+The `Version` and `RelaxedVersion` provides optimized `MarshalBinary`/`UnmarshalBinary` methods for binary encoding.
