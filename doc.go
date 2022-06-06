@@ -5,7 +5,3 @@
 //
 
 package semver
-
-var debug = noopDebug
-
-func noopDebug(format string, a ...interface{}) {}
