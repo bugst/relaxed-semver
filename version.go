@@ -46,23 +46,6 @@ func (v *Version) String() string {
 	return res
 }
 
-var zero = []byte("0")
-
-// Normalize transforms a truncated semver version in a strictly compliant semver
-// version by adding minor and patch versions. For example:
-// "1" is trasformed to "1.0.0" or "2.5-dev" to "2.5.0-dev"
-func (v *Version) Normalize() {
-	if len(v.major) == 0 {
-		v.major = zero[0:1]
-	}
-	if len(v.minor) == 0 {
-		v.minor = zero[0:1]
-	}
-	if len(v.patch) == 0 {
-		v.patch = zero[0:1]
-	}
-}
-
 func compareNumber(a, b []byte) int {
 	la := len(a)
 	if la == 0 {

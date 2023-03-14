@@ -10,8 +10,6 @@ import (
 	"fmt"
 )
 
-var empty = []byte("")
-
 // MustParse parse a version string and panic if the parsing fails
 func MustParse(inVersion string) *Version {
 	res, err := Parse(inVersion)
@@ -21,12 +19,17 @@ func MustParse(inVersion string) *Version {
 	return res
 }
 
-// Parse parse a version string
+var zero = []byte("0")
+
+// Parse parse a version string.
+// A truncated semver version is transformed into a strictly compliant semver
+// version by adding minor and patch versions. For example:
+// "1" is trasformed to "1.0.0" or "2.5-dev" to "2.5.0-dev"
 func Parse(inVersioin string) (*Version, error) {
 	result := &Version{
-		major: empty[:],
-		minor: empty[:],
-		patch: empty[:],
+		major: zero[0:1],
+		minor: zero[0:1],
+		patch: zero[0:1],
 	}
 
 	// Setup parsing harness
