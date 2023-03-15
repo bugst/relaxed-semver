@@ -195,6 +195,12 @@ func TestParser(t *testing.T) {
 	invalid("1.2.3.")
 }
 
+func TestNilVersionStringOutput(t *testing.T) {
+	var nilVersion *Version
+	require.Equal(t, "", nilVersion.String())
+	require.Equal(t, "", string(nilVersion.NormalizedString()))
+}
+
 func TestParseRelaxed(t *testing.T) {
 	bad := ParseRelaxed("bad")
 	require.Nil(t, bad.version)

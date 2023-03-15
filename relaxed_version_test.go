@@ -128,4 +128,7 @@ func TestRelaxedCompatibleWith(t *testing.T) {
 func TestNilRelaxedVersionString(t *testing.T) {
 	var nilVersion *RelaxedVersion
 	require.Equal(t, "", nilVersion.String())
+	require.Equal(t, "", string(nilVersion.NormalizedString()))
+	require.Equal(t, "1.0.0", string(ParseRelaxed("1.0.0").NormalizedString()))
+	require.Equal(t, "invalid-semver", string(ParseRelaxed("invalid-semver").NormalizedString()))
 }
