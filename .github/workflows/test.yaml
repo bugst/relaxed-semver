@@ -1,5 +1,8 @@
 name: test
 
+env:
+  GO_VERSION: "1.19"
+
 on:
   push:
     branches:
@@ -18,7 +21,7 @@ jobs:
       - uses: actions/checkout@master
       - uses: actions/setup-go@v1
         with:
-          go-version: "1.17"
+          go-version: ${{ env.GO_VERSION }}
       - name: Build native
         run: GOARCH=amd64 go build -v ./...
         shell: bash
@@ -33,7 +36,7 @@ jobs:
       - uses: actions/checkout@master
       - uses: actions/setup-go@v1
         with:
-          go-version: "1.17"
+          go-version: ${{ env.GO_VERSION }}
       - name: Run unit tests with coverage
         run: go test -v -race -covermode=atomic -coverprofile=coverage.out ./...
         shell: bash
