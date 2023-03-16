@@ -46,6 +46,53 @@ func (v *Version) String() string {
 	return res
 }
 
+// NormalizedString is a datatype to be used in maps and other places where the
+// version is used as a key.
+type NormalizedString string
+
+// NormalizedString return a string representation of the version that is
+// normalized to always have a major, minor and patch version. This is useful
+// to be used in maps and other places where the version is used as a key.
+func (v *Version) NormalizedString() NormalizedString {
+	if v == nil {
+		return ""
+	}
+	res := NormalizedString("")
+	if len(v.major) > 0 {
+		res += NormalizedString(v.major)
+	} else {
+		res += "0"
+	}
+
+	if len(v.minor) > 0 {
+		res += "." + NormalizedString(v.minor)
+	} else {
+		res += ".0"
+	}
+	if len(v.patch) > 0 {
+		res += "." + NormalizedString(v.patch)
+	} else {
+		res += ".0"
+	}
+	for i, prerelease := range v.prerelases {
+		if i == 0 {
+			res += "-"
+		} else {
+			res += "."
+		}
+		res += NormalizedString(prerelease)
+	}
+	for i, build := range v.builds {
+		if i == 0 {
+			res += "+"
+		} else {
+			res += "."
+		}
+		res += NormalizedString(build)
+	}
+	return res
+}
+
 var zero = []byte("0")
 
 // Normalize transforms a truncated semver version in a strictly compliant semver

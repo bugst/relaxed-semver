@@ -42,6 +42,19 @@ func (v *RelaxedVersion) String() string {
 	return string(v.customversion)
 }
 
+// NormalizedString return a string representation of the version that is
+// normalized (always have a major, minor and patch version when semver compliant).
+// This is useful to be used in maps and other places where the version is used as a key.
+func (v *RelaxedVersion) NormalizedString() NormalizedString {
+	if v == nil {
+		return ""
+	}
+	if v.version != nil {
+		return v.version.NormalizedString()
+	}
+	return NormalizedString(v.customversion)
+}
+
 // CompareTo compares the RelaxedVersion with the one passed as parameter.
 // Returns -1, 0 or 1 if the version is respectively less than, equal
 // or greater than the compared Version

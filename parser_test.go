@@ -18,6 +18,7 @@ func TestParser(t *testing.T) {
 		v, err := Parse(in)
 		require.NoError(t, err, "parsing '%s'", in)
 		require.Equal(t, in, v.String(), "printing of '%s'", in)
+		require.Equal(t, normalized, string(v.NormalizedString()), "normalized printing of '%s'", in)
 		dump := string(v.major) + ","
 		dump += string(v.minor) + ","
 		dump += string(v.patch)
@@ -192,6 +193,12 @@ func TestParser(t *testing.T) {
 
 	invalid("1.2.3.4")
 	invalid("1.2.3.")
+}
+
+func TestNilVersionStringOutput(t *testing.T) {
+	var nilVersion *Version
+	require.Equal(t, "", nilVersion.String())
+	require.Equal(t, "", string(nilVersion.NormalizedString()))
 }
 
 func TestParseRelaxed(t *testing.T) {
