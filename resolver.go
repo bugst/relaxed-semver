@@ -74,7 +74,7 @@ func (ar *Archive) resolve(solution map[string]Release, depsToProcess []Dependen
 	// Pick the first dependency in the deps to process
 	dep := depsToProcess[0]
 	depName := dep.GetName()
-	debug("Considering next dep: %s", dep)
+	debug("Considering next dep: %s", depName)
 
 	// If a release is already picked in the solution check if it match the dep
 	if existingRelease, has := solution[depName]; has {
@@ -92,11 +92,27 @@ func (ar *Archive) resolve(solution map[string]Release, depsToProcess []Dependen
 	// Consider the latest versions first
 	releases.SortDescent()
 
+	findMissingDeps := func(deps []Dependency) Dependency {
+		for _, dep := range deps {
+			if _, ok := ar.Releases[dep.GetName()]; !ok {
+				return dep
+			}
+		}
+		return nil
+	}
+
 	debug("releases matching criteria: %s", releases)
 	for _, release := range releases {
-		debug("try with %s %s", release, release.GetDependencies())
+		deps := release.GetDependencies()
+		debug("try with %s %s", release, deps)
+
+		if missingDep := findMissingDeps(deps); missingDep != nil {
+			debug("%s did not work, becuase his dependency %s does not exists", release, missingDep.GetName())
+			continue
+		}
+
 		solution[depName] = release
-		res := ar.resolve(solution, append(depsToProcess[1:], release.GetDependencies()...))
+		res := ar.resolve(solution, append(depsToProcess[1:], deps...))
 		if res != nil {
 			return res
 		}
