@@ -94,12 +94,13 @@ func TestResolver(t *testing.T) {
 	d100 := rel("D", "1.0.0", deps())
 	d120 := rel("D", "1.2.0", deps("E"))
 	e100 := rel("E", "1.0.0", deps())
+	e101 := rel("E", "1.0.1", deps("F")) // INVALID
 	arch := &Archive{
 		Releases: map[string]Releases{
 			"B": {b131, b130, b121, b120, b111, b110, b100},
 			"C": {c200, c120, c111, c110, c102, c101, c100, c021, c020, c010},
 			"D": {d100, d120},
-			"E": {e100},
+			"E": {e100, e101},
 		},
 	}
 
