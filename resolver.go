@@ -55,9 +55,28 @@ type Archive struct {
 // Resolve will try to depp-resolve dependencies from the Release passed as
 // arguent using a backtracking algorithm.
 func (ar *Archive) Resolve(release Release) []Release {
-	solution := map[string]Release{release.GetName(): release}
-	depsToProcess := release.GetDependencies()
-	return ar.resolve(solution, depsToProcess)
+	mainDep := &bareDependency{
+		name:    release.GetName(),
+		version: release.GetVersion(),
+	}
+	return ar.resolve(map[string]Release{}, []Dependency{mainDep})
+}
+
+type bareDependency struct {
+	name    string
+	version *Version
+}
+
+func (b *bareDependency) GetName() string {
+	return b.name
+}
+
+func (b *bareDependency) GetConstraint() Constraint {
+	return &Equals{Version: b.version}
+}
+
+func (b *bareDependency) String() string {
+	return b.GetName() + b.GetConstraint().String()
 }
 
 func (ar *Archive) resolve(solution map[string]Release, depsToProcess []Dependency) []Release {
