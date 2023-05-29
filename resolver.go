@@ -59,7 +59,7 @@ func (ar *Archive) Resolve(release Release) []Release {
 		name:    release.GetName(),
 		version: release.GetVersion(),
 	}
-	return ar.resolve(map[string]Release{}, []Dependency{mainDep})
+	return ar.resolve(map[string]Release{}, []Dependency{mainDep}, map[Dependency]int{})
 }
 
 type bareDependency struct {
@@ -79,7 +79,7 @@ func (b *bareDependency) String() string {
 	return b.GetName() + b.GetConstraint().String()
 }
 
-func (ar *Archive) resolve(solution map[string]Release, depsToProcess []Dependency) []Release {
+func (ar *Archive) resolve(solution map[string]Release, depsToProcess []Dependency, problematicDeps map[Dependency]int) []Release {
 	debug("deps to process: %s", depsToProcess)
 	if len(depsToProcess) == 0 {
 		debug("All dependencies have been resolved.")
@@ -99,7 +99,7 @@ func (ar *Archive) resolve(solution map[string]Release, depsToProcess []Dependen
 	if existingRelease, has := solution[depName]; has {
 		if match(existingRelease, dep) {
 			debug("%s already in solution and matching", existingRelease)
-			return ar.resolve(solution, depsToProcess[1:])
+			return ar.resolve(solution, depsToProcess[1:], problematicDeps)
 		}
 		debug("%s already in solution do not match... rollingback", existingRelease)
 		return nil
@@ -131,12 +131,18 @@ func (ar *Archive) resolve(solution map[string]Release, depsToProcess []Dependen
 		}
 
 		solution[depName] = release
-		res := ar.resolve(solution, append(depsToProcess[1:], deps...))
-		if res != nil {
+		newDepsToProcess := append(depsToProcess[1:], deps...)
+		// bubble up problematics deps so they are processed first
+		sort.Slice(newDepsToProcess, func(i, j int) bool {
+			return problematicDeps[newDepsToProcess[i]] > problematicDeps[newDepsToProcess[j]]
+		})
+		if res := ar.resolve(solution, newDepsToProcess, problematicDeps); res != nil {
 			return res
 		}
 		debug("%s did not work...", release)
 		delete(solution, depName)
 	}
+
+	problematicDeps[dep]++
 	return nil
 }
