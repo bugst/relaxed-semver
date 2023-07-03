@@ -94,4 +94,4 @@ The `Version` and `RelaxedVersion` provides optimized `MarshalBinary`/`Unmarshal
 
 ## Yaml parsable with `gopkg.in/yaml.v3`
 
-The `Version` and `RelaxedVersion` have the YAML un/marshaler implemented so they can be YAML decoded/encoded with the excellent `gopkg.in/yaml.v3` lirbary.
+The `Version` and `RelaxedVersion` have the YAML un/marshaler implemented so they can be YAML decoded/encoded with the excellent `gopkg.in/yaml.v3` library.
