@@ -7,76 +7,90 @@
 package semver
 
 import (
-	"encoding/json"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 )
 
-func TestJSONParseVersion(t *testing.T) {
+func TestYAMLParseVersion(t *testing.T) {
+	var versionIsYamlUnmarshaler yaml.Unmarshaler = MustParse("1.0.0")
+	var versionIsYamlMarshaler yaml.Marshaler = MustParse("1.0.0")
+	_ = versionIsYamlUnmarshaler
+	_ = versionIsYamlMarshaler
+
 	testVersion := "1.2.3-aaa.4.5.6+bbb.7.8.9"
 	v, err := Parse(testVersion)
 	require.NoError(t, err)
 
-	data, err := json.Marshal(v)
-	fmt.Println(string(data))
+	data, err := yaml.Marshal(v)
+	require.Equal(t, "1.2.3-aaa.4.5.6+bbb.7.8.9\n", string(data))
 	require.NoError(t, err)
 
 	var u Version
-	err = json.Unmarshal(data, &u)
+	err = yaml.Unmarshal(data, &u)
 	require.NoError(t, err)
+
 	dump := fmt.Sprintf("%s,%s,%s,%s,%v,%s",
 		u.major, u.minor, u.patch,
 		u.prerelases, u.numericPrereleases,
 		u.builds)
 	require.Equal(t, "1,2,3,[aaa 4 5 6],[false true true true],[bbb 7 8 9]", dump)
+
 	require.Equal(t, testVersion, u.String())
 
-	err = json.Unmarshal([]byte(`"invalid"`), &u)
+	err = yaml.Unmarshal([]byte(`"invalid"`), &u)
 	require.Error(t, err)
 
-	err = json.Unmarshal([]byte(`123`), &u)
+	err = yaml.Unmarshal([]byte(`invalid:`), &u)
 	require.Error(t, err)
 }
 
-func TestJSONParseRelaxedVersion(t *testing.T) {
+func TestYAMLParseRelaxedVersion(t *testing.T) {
+	var relaxedVersionIsYamlUnmarshaler yaml.Unmarshaler = ParseRelaxed("1.0.0")
+	var relaxedVersionIsYamlMarshaler yaml.Marshaler = ParseRelaxed("1.0.0")
+	_ = relaxedVersionIsYamlUnmarshaler
+	_ = relaxedVersionIsYamlMarshaler
+
 	testVersion := "1.2.3-aaa.4.5.6+bbb.7.8.9"
+
 	v := ParseRelaxed(testVersion)
 
-	data, err := json.Marshal(v)
-	fmt.Println(string(data))
+	data, err := yaml.Marshal(v)
 	require.NoError(t, err)
+	require.Equal(t, "1.2.3-aaa.4.5.6+bbb.7.8.9\n", string(data))
 
 	var u RelaxedVersion
-	err = json.Unmarshal(data, &u)
+	err = yaml.Unmarshal(data, &u)
 	require.NoError(t, err)
+
 	require.Equal(t, testVersion, u.String())
 
-	err = json.Unmarshal([]byte(`"invalid"`), &u)
+	err = yaml.Unmarshal([]byte(`"invalid"`), &u)
 	require.NoError(t, err)
 	require.Equal(t, "invalid", u.String())
 
-	err = json.Unmarshal([]byte(`123`), &u)
+	err = yaml.Unmarshal([]byte(`invalid:`), &u)
 	require.Error(t, err)
 }
 
-func BenchmarkJSONDecoding(b *testing.B) {
+func BenchmarkYAMLDecoding(b *testing.B) {
 	testVersion := "1.2.3-aaa.4.5.6+bbb.7.8.9"
 	v, _ := Parse(testVersion)
-	data, _ := json.Marshal(v)
+	data, _ := yaml.Marshal(v)
 	var u Version
 	for i := 0; i < b.N; i++ {
-		json.Unmarshal(data, &u)
+		yaml.Unmarshal(data, &u)
 	}
 }
 
-func BenchmarkJSONDecodingRelaxed(b *testing.B) {
+func BenchmarkYAMLDecodingRelaxed(b *testing.B) {
 	testVersion := "1.2.3-aaa.4.5.6+bbb.7.8.9"
 	v := ParseRelaxed(testVersion)
-	data, _ := json.Marshal(v)
+	data, _ := yaml.Marshal(v)
 	var u RelaxedVersion
 	for i := 0; i < b.N; i++ {
-		json.Unmarshal(data, &u)
+		yaml.Unmarshal(data, &u)
 	}
 }
