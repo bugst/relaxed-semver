@@ -23,17 +23,15 @@ func TestJSONParseVersion(t *testing.T) {
 	fmt.Println(string(data))
 	require.NoError(t, err)
 
-	dump := fmt.Sprintf("%s,%s,%s,%s,%v,%s",
-		v.major, v.minor, v.patch,
-		v.prerelases, v.numericPrereleases,
-		v.builds)
-	require.Equal(t, "1,2,3,[aaa 4 5 6],[false true true true],[bbb 7 8 9]", dump)
-
 	var u Version
 	err = json.Unmarshal(data, &u)
 	require.NoError(t, err)
-
-	require.Equal(t, testVersion, v.String())
+	dump := fmt.Sprintf("%s,%s,%s,%s,%v,%s",
+		u.major, u.minor, u.patch,
+		u.prerelases, u.numericPrereleases,
+		u.builds)
+	require.Equal(t, "1,2,3,[aaa 4 5 6],[false true true true],[bbb 7 8 9]", dump)
+	require.Equal(t, testVersion, u.String())
 
 	err = json.Unmarshal([]byte(`"invalid"`), &u)
 	require.Error(t, err)
@@ -53,8 +51,7 @@ func TestJSONParseRelaxedVersion(t *testing.T) {
 	var u RelaxedVersion
 	err = json.Unmarshal(data, &u)
 	require.NoError(t, err)
-
-	require.Equal(t, testVersion, v.String())
+	require.Equal(t, testVersion, u.String())
 
 	err = json.Unmarshal([]byte(`"invalid"`), &u)
 	require.NoError(t, err)
