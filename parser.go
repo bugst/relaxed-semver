@@ -10,8 +10,6 @@ import (
 	"fmt"
 )
 
-var empty = []byte("")
-
 // MustParse parse a version string and panic if the parsing fails
 func MustParse(inVersion string) *Version {
 	res, err := Parse(inVersion)
@@ -24,9 +22,7 @@ func MustParse(inVersion string) *Version {
 // Parse parse a version string
 func Parse(inVersion string) (*Version, error) {
 	result := &Version{
-		major: empty[:],
-		minor: empty[:],
-		patch: empty[:],
+		raw: inVersion,
 	}
 	if err := parseInto([]byte(inVersion), result); err != nil {
 		return nil, err
@@ -62,8 +58,12 @@ func parseInto(in []byte, result *Version) error {
 		return fmt.Errorf("no major version found")
 	}
 	if curr == '0' {
-		result.major = in[0:1] // 0
+		result.major = 1
 		if !next() {
+			result.minor = 1
+			result.patch = 1
+			result.prerelease = 1
+			result.build = 1
 			return nil
 		}
 		if numeric[curr] {
@@ -76,14 +76,22 @@ func parseInto(in []byte, result *Version) error {
 	} else {
 		for {
 			if !next() {
-				result.major = in[0:currIdx]
+				result.major = currIdx
+				result.minor = currIdx
+				result.patch = currIdx
+				result.prerelease = currIdx
+				result.build = currIdx
 				return nil
 			}
 			if numeric[curr] {
 				continue
 			}
 			if versionSeparator[curr] {
-				result.major = in[0:currIdx]
+				result.major = currIdx
+				result.minor = currIdx
+				result.patch = currIdx
+				result.prerelease = currIdx
+				result.build = currIdx
 				break
 			}
 			return fmt.Errorf("invalid major version separator '%c'", curr)
@@ -96,8 +104,11 @@ func parseInto(in []byte, result *Version) error {
 			return fmt.Errorf("no minor version found")
 		}
 		if curr == '0' {
-			result.minor = in[currIdx : currIdx+1] // x.0
+			result.minor = currIdx + 1
 			if !next() {
+				result.patch = currIdx
+				result.prerelease = currIdx
+				result.build = currIdx
 				return nil
 			}
 			if numeric[curr] {
@@ -108,22 +119,29 @@ func parseInto(in []byte, result *Version) error {
 			}
 			// Fallthrough and parse next element
 		} else {
-			minorIdx := currIdx
 			for {
 				if !next() {
-					result.minor = in[minorIdx:currIdx]
+					result.minor = currIdx
+					result.patch = currIdx
+					result.prerelease = currIdx
+					result.build = currIdx
 					return nil
 				}
 				if numeric[curr] {
 					continue
 				}
 				if versionSeparator[curr] {
-					result.minor = in[minorIdx:currIdx]
+					result.minor = currIdx
+					result.patch = currIdx
+					result.prerelease = currIdx
+					result.build = currIdx
 					break
 				}
 				return fmt.Errorf("invalid minor version separator '%c'", curr)
 			}
 		}
+	} else {
+		result.minor = currIdx
 	}
 
 	// Parse patch
@@ -132,8 +150,10 @@ func parseInto(in []byte, result *Version) error {
 			return fmt.Errorf("no patch version found")
 		}
 		if curr == '0' {
-			result.patch = in[currIdx : currIdx+1] // x.y.0
+			result.patch = currIdx + 1
 			if !next() {
+				result.prerelease = currIdx
+				result.build = currIdx
 				return nil
 			}
 			if numeric[curr] {
@@ -144,22 +164,27 @@ func parseInto(in []byte, result *Version) error {
 			}
 			// Fallthrough and parse next element
 		} else {
-			patchIdx := currIdx
 			for {
 				if !next() {
-					result.patch = in[patchIdx:currIdx]
+					result.patch = currIdx
+					result.prerelease = currIdx
+					result.build = currIdx
 					return nil
 				}
 				if numeric[curr] {
 					continue
 				}
 				if curr == '-' || curr == '+' {
-					result.patch = in[patchIdx:currIdx]
+					result.patch = currIdx
+					result.prerelease = currIdx
+					result.build = currIdx
 					break
 				}
 				return fmt.Errorf("invalid patch version separator '%c'", curr)
 			}
 		}
+	} else {
+		result.patch = currIdx
 	}
 
 	// 9. A pre-release version MAY be denoted by appending a hyphen and a series
@@ -186,9 +211,9 @@ func parseInto(in []byte, result *Version) error {
 				if zeroPrefix && !alphaIdentifier && currIdx-prereleaseIdx > 1 {
 					return fmt.Errorf("numeric prerelease must not be prefixed with zero")
 				}
-				result.prerelases = append(result.prerelases, in[prereleaseIdx:currIdx])
-				result.numericPrereleases = append(result.numericPrereleases, !alphaIdentifier)
+				result.prerelease = currIdx
 				if !hasNext {
+					result.build = currIdx
 					return nil
 				}
 				if curr == '+' {
@@ -214,6 +239,8 @@ func parseInto(in []byte, result *Version) error {
 			}
 			return fmt.Errorf("invalid prerelease separator: '%c'", curr)
 		}
+	} else {
+		result.prerelease = currIdx
 	}
 
 	// 10. Build metadata MAY be denoted by appending a plus sign and a series of
@@ -233,7 +260,7 @@ func parseInto(in []byte, result *Version) error {
 				if buildIdx == currIdx {
 					return fmt.Errorf("empty build tag not allowed")
 				}
-				result.builds = append(result.builds, in[buildIdx:currIdx])
+				result.build = currIdx
 				if !hasNext {
 					return nil
 				}
@@ -249,4 +276,36 @@ func parseInto(in []byte, result *Version) error {
 		}
 	}
 	return fmt.Errorf("invalid separator: '%c'", curr)
+}
+
+func (v *Version) majorString() string {
+	return v.raw[:v.major]
+}
+
+func (v *Version) minorString() string {
+	if v.minor > v.major {
+		return v.raw[v.major+1 : v.minor]
+	}
+	return ""
+}
+
+func (v *Version) patchString() string {
+	if v.patch > v.minor {
+		return v.raw[v.minor+1 : v.patch]
+	}
+	return ""
+}
+
+func (v *Version) prereleaseString() string {
+	if v.prerelease > v.patch {
+		return v.raw[v.patch+1 : v.prerelease]
+	}
+	return ""
+}
+
+func (v *Version) buildString() string {
+	if v.build > v.prerelease {
+		return v.raw[v.prerelease+1 : v.build]
+	}
+	return ""
 }

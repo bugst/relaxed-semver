@@ -20,8 +20,8 @@ func TestGOBEncoderVersion(t *testing.T) {
 
 	v, err := Parse(testVersion)
 	require.NoError(t, err)
-	dumpV := fmt.Sprintf("%s,%s,%s,%s,%v,%s", v.major, v.minor, v.patch, v.prerelases, v.numericPrereleases, v.builds)
-	require.Equal(t, "1,2,3,[aaa 4 5 6],[false true true true],[bbb 7 8 9]", dumpV)
+	dumpV := fmt.Sprintf("%v,%v,%v,%v,%v,%v", v.raw, v.major, v.minor, v.patch, v.prerelease, v.build)
+	require.Equal(t, "1.2.3-aaa.4.5.6+bbb.7.8.9,1,3,5,15,25", dumpV)
 	require.Equal(t, testVersion, v.String())
 
 	dataV := new(bytes.Buffer)
@@ -31,7 +31,7 @@ func TestGOBEncoderVersion(t *testing.T) {
 	var u Version
 	err = gob.NewDecoder(dataV).Decode(&u)
 	require.NoError(t, err)
-	dumpU := fmt.Sprintf("%s,%s,%s,%s,%v,%s", u.major, u.minor, u.patch, u.prerelases, u.numericPrereleases, u.builds)
+	dumpU := fmt.Sprintf("%v,%v,%v,%v,%v,%v", v.raw, u.major, u.minor, u.patch, u.prerelease, u.build)
 
 	require.Equal(t, dumpV, dumpU)
 	require.Equal(t, testVersion, u.String())

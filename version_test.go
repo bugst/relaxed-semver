@@ -24,12 +24,13 @@ func ascending(t *testing.T, allowEqual bool, list ...string) {
 		a := MustParse(list[i])
 		b := MustParse(list[i+1])
 		comp := a.CompareTo(b)
-		fmt.Printf("%s %s %s\n", a, sign[comp], b)
 		if allowEqual {
+			fmt.Printf("%s %s= %s\n", list[i], sign[comp], list[i+1])
 			require.LessOrEqual(t, comp, 0)
 			require.True(t, a.LessThanOrEqual(b))
 			require.False(t, a.GreaterThan(b))
 		} else {
+			fmt.Printf("%s %s %s\n", list[i], sign[comp], list[i+1])
 			require.Equal(t, comp, -1)
 			require.True(t, a.LessThan(b))
 			require.True(t, a.LessThanOrEqual(b))
@@ -61,31 +62,35 @@ func TestVersionComparator(t *testing.T) {
 			for _, b := range list[i+1:] {
 				comp := a.CompareTo(b)
 				fmt.Printf("%s %s %s\n", a, sign[comp], b)
-				require.Equal(t, comp, 0)
-				require.False(t, a.LessThan(b))
-				require.True(t, a.LessThanOrEqual(b))
-				require.True(t, a.Equal(b))
-				require.True(t, a.GreaterThanOrEqual(b))
-				require.False(t, a.GreaterThan(b))
+				require.Equal(t, comp, 0, "cmp(%s, %s) must return '=', but returned '%s'", a, b, sign[comp])
+				require.False(t, a.LessThan(b), "NOT wanted: %s < %s", a, b)
+				require.True(t, a.LessThanOrEqual(b), "wanted: %s <= %s", a, b)
+				require.True(t, a.Equal(b), "wanted: %s = %s", a, b)
+				require.True(t, a.GreaterThanOrEqual(b), "wanted: %s >= %s", a, b)
+				require.False(t, a.GreaterThan(b), "NOT wanted: %s > %s", a, b)
 
 				comp = b.CompareTo(a)
 				fmt.Printf("%s %s %s\n", b, sign[comp], a)
-				require.Equal(t, comp, 0)
-				require.False(t, b.LessThan(a))
-				require.True(t, b.LessThanOrEqual(a))
-				require.True(t, b.Equal(a))
-				require.True(t, b.GreaterThanOrEqual(a))
-				require.False(t, b.GreaterThan(a))
+				require.Equal(t, comp, 0, "cmp(%s, %s) must return '=', but returned '%s'", b, a, sign[comp])
+				require.False(t, b.LessThan(a), "NOT wanted: %s < %s", b, a)
+				require.True(t, b.LessThanOrEqual(a), "wanted: %s <= %s", b, a)
+				require.True(t, b.Equal(a), "wanted: %s = %s", b, a)
+				require.True(t, b.GreaterThanOrEqual(a), "wanted: %s >= %s", b, a)
+				require.False(t, b.GreaterThan(a), "NOT wanted: %s > %s", b, a)
 			}
 		}
 	}
 	ascending(t, false,
+		"1.0.0-2",
+		"1.0.0-11",
+		"1.0.0-11a",
 		"1.0.0-alpha",
 		"1.0.0-alpha.1",
 		"1.0.0-alpha.beta",
 		"1.0.0-beta",
 		"1.0.0-beta.2",
 		"1.0.0-beta.11",
+		"1.0.0-beta.11a",
 		"1.0.0-rc.1",
 		"1.0.0",
 		"1.0.1",
@@ -212,4 +217,28 @@ func TestCompatibleWithVersionComparator(t *testing.T) {
 func TestNilVersionString(t *testing.T) {
 	var nilVersion *Version
 	require.Equal(t, "", nilVersion.String())
+}
+
+func TestCompareNumbers(t *testing.T) {
+	// ==
+	require.Zero(t, compareNumberRelaxed("", ""))
+	require.Zero(t, compareNumberRelaxed("0", ""))
+	require.Zero(t, compareNumberRelaxed("", "0"))
+	require.Zero(t, compareNumberRelaxed("0", "0"))
+	require.Zero(t, compareNumberRelaxed("5", "5"))
+	require.Zero(t, compareNumberRelaxed("15", "15"))
+
+	// >
+	testGreater := func(a, b string) {
+		require.Positive(t, compareNumberRelaxed(a, b), `compareNumber("%s","%s") is not positive`, a, b)
+		require.Negative(t, compareNumberRelaxed(b, a), `compareNumber("%s","%s") is not negative`, b, a)
+	}
+	testGreater("1", "")
+	testGreater("1", "0")
+	testGreater("1", "")
+	testGreater("2", "1")
+	testGreater("10", "")
+	testGreater("10", "0")
+	testGreater("10", "1")
+	testGreater("10", "2")
 }

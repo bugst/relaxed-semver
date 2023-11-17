@@ -26,12 +26,12 @@ func (v *Version) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	v.raw = parsed.raw
 	v.major = parsed.major
 	v.minor = parsed.minor
 	v.patch = parsed.patch
-	v.prerelases = parsed.prerelases
-	v.numericPrereleases = parsed.numericPrereleases
-	v.builds = parsed.builds
+	v.prerelease = parsed.prerelease
+	v.build = parsed.build
 	return nil
 }
 

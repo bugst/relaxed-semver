@@ -72,13 +72,17 @@ func BenchmarkVersionParser(b *testing.B) {
 		}
 	}
 
-	// Results for v0.11.0:
 	// $ go test -benchmem -run=^$ -bench ^BenchmarkVersionParser$ go.bug.st/relaxed-semver
 	// goos: linux
 	// goarch: amd64
 	// pkg: go.bug.st/relaxed-semver
 	// cpu: AMD Ryzen 5 3600 6-Core Processor
+
+	// Results for v0.11.0:
 	// BenchmarkVersionParser-12    	  188611	      7715 ns/op	    8557 B/op	      51 allocs/op
+
+	// Results for v0.12.0:  \o/
+	// BenchmarkVersionParser-12    	 1298325	       912.9 ns/op	       0 B/op	       0 allocs/op
 }
 
 func BenchmarkVersionComparator(b *testing.B) {
@@ -99,11 +103,15 @@ func BenchmarkVersionComparator(b *testing.B) {
 		}
 	}
 
-	// Results for v0.11.0:
 	// $ go test -benchmem -run=^$ -bench ^BenchmarkVersionComparator$ go.bug.st/relaxed-semver -v
 	// goos: linux
 	// goarch: amd64
 	// pkg: go.bug.st/relaxed-semver
 	// cpu: AMD Ryzen 5 3600 6-Core Processor
+
+	// Results for v0.11.0:
 	// BenchmarkVersionComparator-12    	   74793	     17347 ns/op	       0 B/op	       0 allocs/op
+
+	// Results for v0.12.0:  :-(
+	// BenchmarkVersionComparator-12    	   66262	     18340 ns/op	       0 B/op	       0 allocs/op
 }
