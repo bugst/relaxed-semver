@@ -70,7 +70,7 @@ func (v *Version) Normalize() {
 	}
 }
 
-func compareNumberRelaxed(a, b string) int {
+func compareNumber(a, b string) int {
 	la := len(a)
 	lb := len(b)
 	if la == lb {
@@ -85,28 +85,10 @@ func compareNumberRelaxed(a, b string) int {
 		}
 		return 0
 	}
-
-	// la != lb...
-
-	// in relaxed semver, a missing number is considered 0
-	if la == 0 {
-		if b[0] == '0' {
-			return 0 // ("","0")
-		}
-		return -1 // ("","N")
-	}
-	if lb == 0 {
-		if a[0] == '0' {
-			return 0 // ("0","")
-		}
-		return 1 // ("N","")
-	}
-
-	// both a and b are not empty
 	if la > lb {
-		return 1 // ("NNN","N")
+		return 1
 	}
-	return -1 // ("N","NNN")
+	return -1
 }
 
 func compareAlpha(a, b []byte) int {
@@ -119,6 +101,8 @@ func compareAlpha(a, b []byte) int {
 	return 0
 }
 
+var zero = "0"
+
 // CompareTo compares the Version with the one passed as parameter.
 // Returns -1, 0 or 1 if the version is respectively less than, equal
 // or greater than the compared Version
@@ -130,14 +114,92 @@ func (v *Version) CompareTo(u *Version) int {
 	// comparing each of these identifiers from left to right as follows: Major, minor,
 	// and patch versions are always compared numerically.
 	// Example: 1.0.0 < 2.0.0 < 2.1.0 < 2.1.1.
-	if cmp := compareNumberRelaxed(v.majorString(), u.majorString()); cmp != 0 {
-		return cmp
+	vMajor := zero[:]
+	if v.major > 0 {
+		vMajor = v.raw[:v.major]
 	}
-	if cmp := compareNumberRelaxed(v.minorString(), u.minorString()); cmp != 0 {
-		return cmp
+	uMajor := zero[:]
+	if u.major > 0 {
+		uMajor = u.raw[:u.major]
 	}
-	if cmp := compareNumberRelaxed(v.patchString(), u.patchString()); cmp != 0 {
-		return cmp
+	{
+		la := len(vMajor)
+		lb := len(uMajor)
+		if la == lb {
+			for i := range vMajor {
+				if vMajor[i] == uMajor[i] {
+					continue
+				}
+				if vMajor[i] > uMajor[i] {
+					return 1
+				}
+				return -1
+			}
+		} else if la > lb {
+			return 1
+		} else {
+			return -1
+		}
+	}
+	vMinor := zero[:]
+	if v.minor > v.major {
+		vMinor = v.raw[v.major+1 : v.minor]
+	}
+	uMinor := zero[:]
+	if u.minor > u.major {
+		uMinor = u.raw[u.major+1 : u.minor]
+	}
+	// if cmp := compareNumber(vMinor, uMinor); cmp != 0 {
+	// 	return cmp
+	// }
+	{
+		la := len(vMinor)
+		lb := len(uMinor)
+		if la == lb {
+			for i := range vMinor {
+				if vMinor[i] == uMinor[i] {
+					continue
+				}
+				if vMinor[i] > uMinor[i] {
+					return 1
+				}
+				return -1
+			}
+		} else if la > lb {
+			return 1
+		} else {
+			return -1
+		}
+	}
+	vPatch := zero[:]
+	if v.patch > v.minor {
+		vPatch = v.raw[v.minor+1 : v.patch]
+	}
+	uPatch := zero[:]
+	if u.patch > u.minor {
+		uPatch = u.raw[u.minor+1 : u.patch]
+	}
+	// if cmp := compareNumber(vPatch, uPatch); cmp != 0 {
+	// 	return cmp
+	// }
+	{
+		la := len(vPatch)
+		lb := len(uPatch)
+		if la == lb {
+			for i := range vPatch {
+				if vPatch[i] == uPatch[i] {
+					continue
+				}
+				if vPatch[i] > uPatch[i] {
+					return 1
+				}
+				return -1
+			}
+		} else if la > lb {
+			return 1
+		} else {
+			return -1
+		}
 	}
 
 	// if both versions have no pre-release, they are equal
@@ -189,7 +251,7 @@ func (v *Version) CompareTo(u *Version) int {
 
 		if vIdx == vLast || vCurr == '.' {
 			if uIdx != uLast && uCurr != '.' {
-				if !uIsAlpha && !isNumeric(uCurr) {
+				if !uIsAlpha && !(uCurr >= '0' && uCurr <= '9') {
 					uIsAlpha = true
 				}
 				uIsLonger = true
@@ -198,7 +260,7 @@ func (v *Version) CompareTo(u *Version) int {
 			}
 		} else if uIdx == uLast || uCurr == '.' {
 			if vIdx != vLast && vCurr != '.' {
-				if !vIsAlpha && !isNumeric(vCurr) {
+				if !vIsAlpha && !(vCurr >= '0' && vCurr <= '9') {
 					vIsAlpha = true
 				}
 				vIsLonger = true
@@ -213,10 +275,10 @@ func (v *Version) CompareTo(u *Version) int {
 					cmp = -1
 				}
 			}
-			if !vIsAlpha && !isNumeric(vCurr) {
+			if !vIsAlpha && !(vCurr >= '0' && vCurr <= '9') {
 				vIsAlpha = true
 			}
-			if !uIsAlpha && !isNumeric(uCurr) {
+			if !uIsAlpha && !(uCurr >= '0' && uCurr <= '9') {
 				uIsAlpha = true
 			}
 			vIdx++
@@ -305,19 +367,43 @@ func (v *Version) CompatibleWith(u *Version) bool {
 	if !u.GreaterThanOrEqual(v) {
 		return false
 	}
-	majorEquals := compareNumberRelaxed(v.majorString(), u.majorString()) == 0
+	vMajor := zero[:]
+	if v.major > 0 {
+		vMajor = v.raw[:v.major]
+	}
+	uMajor := zero[:]
+	if u.major > 0 {
+		uMajor = u.raw[:u.major]
+	}
+	majorEquals := compareNumber(vMajor, uMajor) == 0
 	if v.major > 0 && v.raw[0] != '0' {
 		return majorEquals
 	}
 	if !majorEquals {
 		return false
 	}
-	minorEquals := compareNumberRelaxed(v.minorString(), u.minorString()) == 0
-	if v.minor > v.major && v.raw[v.major+1] != '0' {
+	vMinor := zero[:]
+	if v.minor > v.major {
+		vMinor = v.raw[v.major+1 : v.minor]
+	}
+	uMinor := zero[:]
+	if u.minor > u.major {
+		uMinor = u.raw[u.major+1 : u.minor]
+	}
+	minorEquals := compareNumber(vMinor, uMinor) == 0
+	if vMinor[0] != '0' {
 		return minorEquals
 	}
 	if !minorEquals {
 		return false
 	}
-	return compareNumberRelaxed(v.patchString(), u.patchString()) == 0
+	vPatch := zero[:]
+	if v.patch > v.minor {
+		vPatch = v.raw[v.minor+1 : v.patch]
+	}
+	uPatch := zero[:]
+	if u.patch > u.minor {
+		uPatch = u.raw[u.minor+1 : u.patch]
+	}
+	return compareNumber(vPatch, uPatch) == 0
 }

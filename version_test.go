@@ -221,17 +221,14 @@ func TestNilVersionString(t *testing.T) {
 
 func TestCompareNumbers(t *testing.T) {
 	// ==
-	require.Zero(t, compareNumberRelaxed("", ""))
-	require.Zero(t, compareNumberRelaxed("0", ""))
-	require.Zero(t, compareNumberRelaxed("", "0"))
-	require.Zero(t, compareNumberRelaxed("0", "0"))
-	require.Zero(t, compareNumberRelaxed("5", "5"))
-	require.Zero(t, compareNumberRelaxed("15", "15"))
+	require.Zero(t, compareNumber("0", "0"))
+	require.Zero(t, compareNumber("5", "5"))
+	require.Zero(t, compareNumber("15", "15"))
 
 	// >
 	testGreater := func(a, b string) {
-		require.Positive(t, compareNumberRelaxed(a, b), `compareNumber("%s","%s") is not positive`, a, b)
-		require.Negative(t, compareNumberRelaxed(b, a), `compareNumber("%s","%s") is not negative`, b, a)
+		require.Positive(t, compareNumber(a, b), `compareNumber("%s","%s") is not positive`, a, b)
+		require.Negative(t, compareNumber(b, a), `compareNumber("%s","%s") is not negative`, b, a)
 	}
 	testGreater("1", "")
 	testGreater("1", "0")
