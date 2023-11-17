@@ -68,7 +68,9 @@ func BenchmarkVersionParser(b *testing.B) {
 	res := &Version{}
 	for i := 0; i < b.N; i++ {
 		for _, v := range list {
-			parseInto([]byte(v), res)
+			res.raw = v
+			res.bytes = []byte(v)
+			parse(res)
 		}
 	}
 
@@ -82,7 +84,7 @@ func BenchmarkVersionParser(b *testing.B) {
 	// BenchmarkVersionParser-12    	  188611	      7715 ns/op	    8557 B/op	      51 allocs/op
 
 	// Results for v0.12.0:  \o/
-	// BenchmarkVersionParser-12    	 1298325	       912.9 ns/op	       0 B/op	       0 allocs/op
+	// BenchmarkVersionParser-12    	  479626	      3719 ns/op	     616 B/op	      51 allocs/op
 }
 
 func BenchmarkVersionComparator(b *testing.B) {
@@ -112,6 +114,6 @@ func BenchmarkVersionComparator(b *testing.B) {
 	// Results for v0.11.0:
 	// BenchmarkVersionComparator-12    	   74793	     17347 ns/op	       0 B/op	       0 allocs/op
 
-	// Results for v0.12.0:  :-|
-	// BenchmarkVersionComparator-12    	   74320	     16223 ns/op	       0 B/op	       0 allocs/op
+	// Results for v0.12.0:  :-)
+	// BenchmarkVersionComparator-12    	   80622	     14659 ns/op	       0 B/op	       0 allocs/op
 }

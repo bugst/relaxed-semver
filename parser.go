@@ -22,16 +22,18 @@ func MustParse(inVersion string) *Version {
 // Parse parse a version string
 func Parse(inVersion string) (*Version, error) {
 	result := &Version{
-		raw: inVersion,
+		raw:   inVersion,
+		bytes: []byte(inVersion),
 	}
-	if err := parseInto([]byte(inVersion), result); err != nil {
+	if err := parse(result); err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func parseInto(in []byte, result *Version) error {
+func parse(result *Version) error {
 	// Setup parsing harness
+	in := result.bytes
 	inLen := len(in)
 	currIdx := -1
 	var curr byte

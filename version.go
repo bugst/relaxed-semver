@@ -9,6 +9,7 @@ package semver
 // Version contains the results of parsed version string
 type Version struct {
 	raw        string
+	bytes      []byte
 	major      int
 	minor      int
 	patch      int
@@ -70,7 +71,7 @@ func (v *Version) Normalize() {
 	}
 }
 
-func compareNumber(a, b string) int {
+func compareNumber(a, b []byte) int {
 	la := len(a)
 	lb := len(b)
 	if la == lb {
@@ -101,7 +102,7 @@ func compareAlpha(a, b []byte) int {
 	return 0
 }
 
-var zero = "0"
+var zero = []byte("0")
 
 // CompareTo compares the Version with the one passed as parameter.
 // Returns -1, 0 or 1 if the version is respectively less than, equal
@@ -114,23 +115,25 @@ func (v *Version) CompareTo(u *Version) int {
 	// comparing each of these identifiers from left to right as follows: Major, minor,
 	// and patch versions are always compared numerically.
 	// Example: 1.0.0 < 2.0.0 < 2.1.0 < 2.1.1.
-	vMajor := zero[:]
-	if v.major > 0 {
-		vMajor = v.raw[:v.major]
+	vMajorValue := zero[:]
+	vMajor := v.major
+	if vMajor > 0 {
+		vMajorValue = v.bytes[:vMajor]
 	}
-	uMajor := zero[:]
-	if u.major > 0 {
-		uMajor = u.raw[:u.major]
+	uMajorValue := zero[:]
+	uMajor := u.major
+	if uMajor > 0 {
+		uMajorValue = u.bytes[:uMajor]
 	}
 	{
-		la := len(vMajor)
-		lb := len(uMajor)
+		la := len(vMajorValue)
+		lb := len(uMajorValue)
 		if la == lb {
-			for i := range vMajor {
-				if vMajor[i] == uMajor[i] {
+			for i := range vMajorValue {
+				if vMajorValue[i] == uMajorValue[i] {
 					continue
 				}
-				if vMajor[i] > uMajor[i] {
+				if vMajorValue[i] > uMajorValue[i] {
 					return 1
 				}
 				return -1
@@ -141,26 +144,25 @@ func (v *Version) CompareTo(u *Version) int {
 			return -1
 		}
 	}
-	vMinor := zero[:]
-	if v.minor > v.major {
-		vMinor = v.raw[v.major+1 : v.minor]
+	vMinorValue := zero[:]
+	vMinor := v.minor
+	if vMinor > vMajor {
+		vMinorValue = v.bytes[vMajor+1 : vMinor]
 	}
-	uMinor := zero[:]
-	if u.minor > u.major {
-		uMinor = u.raw[u.major+1 : u.minor]
+	uMinorValue := zero[:]
+	uMinor := u.minor
+	if uMinor > uMajor {
+		uMinorValue = u.bytes[uMajor+1 : uMinor]
 	}
-	// if cmp := compareNumber(vMinor, uMinor); cmp != 0 {
-	// 	return cmp
-	// }
 	{
-		la := len(vMinor)
-		lb := len(uMinor)
+		la := len(vMinorValue)
+		lb := len(uMinorValue)
 		if la == lb {
-			for i := range vMinor {
-				if vMinor[i] == uMinor[i] {
+			for i := range vMinorValue {
+				if vMinorValue[i] == uMinorValue[i] {
 					continue
 				}
-				if vMinor[i] > uMinor[i] {
+				if vMinorValue[i] > uMinorValue[i] {
 					return 1
 				}
 				return -1
@@ -171,26 +173,25 @@ func (v *Version) CompareTo(u *Version) int {
 			return -1
 		}
 	}
-	vPatch := zero[:]
-	if v.patch > v.minor {
-		vPatch = v.raw[v.minor+1 : v.patch]
+	vPatchValue := zero[:]
+	vPatch := v.patch
+	if vPatch > vMinor {
+		vPatchValue = v.bytes[vMinor+1 : vPatch]
 	}
-	uPatch := zero[:]
-	if u.patch > u.minor {
-		uPatch = u.raw[u.minor+1 : u.patch]
+	uPatchValue := zero[:]
+	uPatch := u.patch
+	if uPatch > uMinor {
+		uPatchValue = u.bytes[uMinor+1 : uPatch]
 	}
-	// if cmp := compareNumber(vPatch, uPatch); cmp != 0 {
-	// 	return cmp
-	// }
 	{
-		la := len(vPatch)
-		lb := len(uPatch)
+		la := len(vPatchValue)
+		lb := len(uPatchValue)
 		if la == lb {
-			for i := range vPatch {
-				if vPatch[i] == uPatch[i] {
+			for i := range vPatchValue {
+				if vPatchValue[i] == uPatchValue[i] {
 					continue
 				}
-				if vPatch[i] > uPatch[i] {
+				if vPatchValue[i] > uPatchValue[i] {
 					return 1
 				}
 				return -1
@@ -203,7 +204,7 @@ func (v *Version) CompareTo(u *Version) int {
 	}
 
 	// if both versions have no pre-release, they are equal
-	if v.prerelease == v.patch && u.prerelease == u.patch {
+	if v.prerelease == vPatch && u.prerelease == uPatch {
 		return 0
 	}
 
@@ -212,11 +213,11 @@ func (v *Version) CompareTo(u *Version) int {
 	// Example: 1.0.0-alpha < 1.0.0.
 
 	// if v has no pre-release, it's greater than u
-	if v.prerelease == v.patch {
+	if v.prerelease == vPatch {
 		return 1
 	}
 	// if u has no pre-release, it's greater than v
-	if u.prerelease == u.patch {
+	if u.prerelease == uPatch {
 		return -1
 	}
 
@@ -369,14 +370,14 @@ func (v *Version) CompatibleWith(u *Version) bool {
 	}
 	vMajor := zero[:]
 	if v.major > 0 {
-		vMajor = v.raw[:v.major]
+		vMajor = v.bytes[:v.major]
 	}
 	uMajor := zero[:]
 	if u.major > 0 {
-		uMajor = u.raw[:u.major]
+		uMajor = u.bytes[:u.major]
 	}
 	majorEquals := compareNumber(vMajor, uMajor) == 0
-	if v.major > 0 && v.raw[0] != '0' {
+	if v.major > 0 && v.bytes[0] != '0' {
 		return majorEquals
 	}
 	if !majorEquals {
@@ -384,11 +385,11 @@ func (v *Version) CompatibleWith(u *Version) bool {
 	}
 	vMinor := zero[:]
 	if v.minor > v.major {
-		vMinor = v.raw[v.major+1 : v.minor]
+		vMinor = v.bytes[v.major+1 : v.minor]
 	}
 	uMinor := zero[:]
 	if u.minor > u.major {
-		uMinor = u.raw[u.major+1 : u.minor]
+		uMinor = u.bytes[u.major+1 : u.minor]
 	}
 	minorEquals := compareNumber(vMinor, uMinor) == 0
 	if vMinor[0] != '0' {
@@ -399,11 +400,11 @@ func (v *Version) CompatibleWith(u *Version) bool {
 	}
 	vPatch := zero[:]
 	if v.patch > v.minor {
-		vPatch = v.raw[v.minor+1 : v.patch]
+		vPatch = v.bytes[v.minor+1 : v.patch]
 	}
 	uPatch := zero[:]
 	if u.patch > u.minor {
-		uPatch = u.raw[u.minor+1 : u.patch]
+		uPatch = u.bytes[u.minor+1 : u.patch]
 	}
 	return compareNumber(vPatch, uPatch) == 0
 }
