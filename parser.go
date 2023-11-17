@@ -22,15 +22,20 @@ func MustParse(inVersion string) *Version {
 }
 
 // Parse parse a version string
-func Parse(inVersioin string) (*Version, error) {
+func Parse(inVersion string) (*Version, error) {
 	result := &Version{
 		major: empty[:],
 		minor: empty[:],
 		patch: empty[:],
 	}
+	if err := parseInto([]byte(inVersion), result); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
 
+func parseInto(in []byte, result *Version) error {
 	// Setup parsing harness
-	in := []byte(inVersioin)
 	inLen := len(in)
 	currIdx := -1
 	var curr byte
@@ -51,28 +56,28 @@ func Parse(inVersioin string) (*Version, error) {
 
 	// Parse major
 	if !next() {
-		return result, nil // empty version
+		return nil // empty version
 	}
 	if !numeric[curr] {
-		return nil, fmt.Errorf("no major version found")
+		return fmt.Errorf("no major version found")
 	}
 	if curr == '0' {
 		result.major = in[0:1] // 0
 		if !next() {
-			return result, nil
+			return nil
 		}
 		if numeric[curr] {
-			return nil, fmt.Errorf("major version must not be prefixed with zero")
+			return fmt.Errorf("major version must not be prefixed with zero")
 		}
 		if !versionSeparator[curr] {
-			return nil, fmt.Errorf("invalid major version separator '%c'", curr)
+			return fmt.Errorf("invalid major version separator '%c'", curr)
 		}
 		// Fallthrough and parse next element
 	} else {
 		for {
 			if !next() {
 				result.major = in[0:currIdx]
-				return result, nil
+				return nil
 			}
 			if numeric[curr] {
 				continue
@@ -81,25 +86,25 @@ func Parse(inVersioin string) (*Version, error) {
 				result.major = in[0:currIdx]
 				break
 			}
-			return nil, fmt.Errorf("invalid major version separator '%c'", curr)
+			return fmt.Errorf("invalid major version separator '%c'", curr)
 		}
 	}
 
 	// Parse minor
 	if curr == '.' {
 		if !next() || !numeric[curr] {
-			return nil, fmt.Errorf("no minor version found")
+			return fmt.Errorf("no minor version found")
 		}
 		if curr == '0' {
 			result.minor = in[currIdx : currIdx+1] // x.0
 			if !next() {
-				return result, nil
+				return nil
 			}
 			if numeric[curr] {
-				return nil, fmt.Errorf("minor version must not be prefixed with zero")
+				return fmt.Errorf("minor version must not be prefixed with zero")
 			}
 			if !versionSeparator[curr] {
-				return nil, fmt.Errorf("invalid minor version separator '%c'", curr)
+				return fmt.Errorf("invalid minor version separator '%c'", curr)
 			}
 			// Fallthrough and parse next element
 		} else {
@@ -107,7 +112,7 @@ func Parse(inVersioin string) (*Version, error) {
 			for {
 				if !next() {
 					result.minor = in[minorIdx:currIdx]
-					return result, nil
+					return nil
 				}
 				if numeric[curr] {
 					continue
@@ -116,7 +121,7 @@ func Parse(inVersioin string) (*Version, error) {
 					result.minor = in[minorIdx:currIdx]
 					break
 				}
-				return nil, fmt.Errorf("invalid minor version separator '%c'", curr)
+				return fmt.Errorf("invalid minor version separator '%c'", curr)
 			}
 		}
 	}
@@ -124,18 +129,18 @@ func Parse(inVersioin string) (*Version, error) {
 	// Parse patch
 	if curr == '.' {
 		if !next() || !numeric[curr] {
-			return nil, fmt.Errorf("no patch version found")
+			return fmt.Errorf("no patch version found")
 		}
 		if curr == '0' {
 			result.patch = in[currIdx : currIdx+1] // x.y.0
 			if !next() {
-				return result, nil
+				return nil
 			}
 			if numeric[curr] {
-				return nil, fmt.Errorf("patch version must not be prefixed with zero")
+				return fmt.Errorf("patch version must not be prefixed with zero")
 			}
 			if !versionSeparator[curr] {
-				return nil, fmt.Errorf("invalid patch version separator '%c'", curr)
+				return fmt.Errorf("invalid patch version separator '%c'", curr)
 			}
 			// Fallthrough and parse next element
 		} else {
@@ -143,7 +148,7 @@ func Parse(inVersioin string) (*Version, error) {
 			for {
 				if !next() {
 					result.patch = in[patchIdx:currIdx]
-					return result, nil
+					return nil
 				}
 				if numeric[curr] {
 					continue
@@ -152,7 +157,7 @@ func Parse(inVersioin string) (*Version, error) {
 					result.patch = in[patchIdx:currIdx]
 					break
 				}
-				return nil, fmt.Errorf("invalid patch version separator '%c'", curr)
+				return fmt.Errorf("invalid patch version separator '%c'", curr)
 			}
 		}
 	}
@@ -176,15 +181,15 @@ func Parse(inVersioin string) (*Version, error) {
 		for {
 			if hasNext := next(); !hasNext || curr == '.' || curr == '+' {
 				if prereleaseIdx == currIdx {
-					return nil, fmt.Errorf("empty prerelease not allowed")
+					return fmt.Errorf("empty prerelease not allowed")
 				}
 				if zeroPrefix && !alphaIdentifier && currIdx-prereleaseIdx > 1 {
-					return nil, fmt.Errorf("numeric prerelease must not be prefixed with zero")
+					return fmt.Errorf("numeric prerelease must not be prefixed with zero")
 				}
 				result.prerelases = append(result.prerelases, in[prereleaseIdx:currIdx])
 				result.numericPrereleases = append(result.numericPrereleases, !alphaIdentifier)
 				if !hasNext {
-					return result, nil
+					return nil
 				}
 				if curr == '+' {
 					break
@@ -207,7 +212,7 @@ func Parse(inVersioin string) (*Version, error) {
 				alphaIdentifier = true
 				continue
 			}
-			return nil, fmt.Errorf("invalid prerelease separator: '%c'", curr)
+			return fmt.Errorf("invalid prerelease separator: '%c'", curr)
 		}
 	}
 
@@ -226,11 +231,11 @@ func Parse(inVersioin string) (*Version, error) {
 		for {
 			if hasNext := next(); !hasNext || curr == '.' {
 				if buildIdx == currIdx {
-					return nil, fmt.Errorf("empty build tag not allowed")
+					return fmt.Errorf("empty build tag not allowed")
 				}
 				result.builds = append(result.builds, in[buildIdx:currIdx])
 				if !hasNext {
-					return result, nil
+					return nil
 				}
 
 				// Multiple builds
@@ -240,8 +245,8 @@ func Parse(inVersioin string) (*Version, error) {
 			if identifier[curr] {
 				continue
 			}
-			return nil, fmt.Errorf("invalid separator for builds: '%c'", curr)
+			return fmt.Errorf("invalid separator for builds: '%c'", curr)
 		}
 	}
-	return nil, fmt.Errorf("invalid separator: '%c'", curr)
+	return fmt.Errorf("invalid separator: '%c'", curr)
 }
