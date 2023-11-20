@@ -1,10 +1,10 @@
 module go.bug.st/relaxed-semver
 
-go 1.17
+go 1.21
 
 require (
 	github.com/stretchr/testify v1.7.1
-	gopkg.in/yaml.v3 v3.0.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
