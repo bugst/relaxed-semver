@@ -114,6 +114,6 @@ func BenchmarkVersionComparator(b *testing.B) {
 	// Results for v0.11.0:
 	// BenchmarkVersionComparator-12    	   74793	     17347 ns/op	       0 B/op	       0 allocs/op
 
-	// Results for v0.12.0:  :-)
-	// BenchmarkVersionComparator-12    	   80622	     14659 ns/op	       0 B/op	       0 allocs/op
+	// Results for v0.12.0:  :-D
+	// BenchmarkVersionComparator-12    	  101772	     11720 ns/op	       0 B/op	       0 allocs/op
 }

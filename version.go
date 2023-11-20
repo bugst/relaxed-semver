@@ -115,87 +115,85 @@ func (v *Version) CompareTo(u *Version) int {
 	// comparing each of these identifiers from left to right as follows: Major, minor,
 	// and patch versions are always compared numerically.
 	// Example: 1.0.0 < 2.0.0 < 2.1.0 < 2.1.1.
-	vMajorValue := zero[:]
+	vIdx := 0
+	uIdx := 0
 	vMajor := v.major
-	if vMajor > 0 {
-		vMajorValue = v.bytes[:vMajor]
-	}
-	uMajorValue := zero[:]
 	uMajor := u.major
-	if uMajor > 0 {
-		uMajorValue = u.bytes[:uMajor]
-	}
 	{
-		la := len(vMajorValue)
-		lb := len(uMajorValue)
-		if la == lb {
-			for i := range vMajorValue {
-				if vMajorValue[i] == uMajorValue[i] {
+		if vMajor == uMajor {
+			for vIdx < vMajor {
+				if v.bytes[vIdx] == u.bytes[uIdx] {
+					vIdx++
+					uIdx++
 					continue
 				}
-				if vMajorValue[i] > uMajorValue[i] {
+				if v.bytes[vIdx] > u.bytes[uIdx] {
 					return 1
 				}
 				return -1
 			}
-		} else if la > lb {
+		} else if vMajor == 0 && u.bytes[uIdx] == '0' {
+			return 0
+		} else if uMajor == 0 && v.bytes[vIdx] == '0' {
+			return 0
+		} else if vMajor > uMajor {
 			return 1
 		} else {
 			return -1
 		}
 	}
-	vMinorValue := zero[:]
 	vMinor := v.minor
-	if vMinor > vMajor {
-		vMinorValue = v.bytes[vMajor+1 : vMinor]
-	}
-	uMinorValue := zero[:]
 	uMinor := u.minor
-	if uMinor > uMajor {
-		uMinorValue = u.bytes[uMajor+1 : uMinor]
-	}
+	vIdx = vMajor + 1
+	uIdx = uMajor + 1
 	{
-		la := len(vMinorValue)
-		lb := len(uMinorValue)
+		la := vMinor - vMajor - 1
+		lb := uMinor - uMajor - 1
 		if la == lb {
-			for i := range vMinorValue {
-				if vMinorValue[i] == uMinorValue[i] {
+			for vIdx < vMinor {
+				if v.bytes[vIdx] == u.bytes[uIdx] {
+					vIdx++
+					uIdx++
 					continue
 				}
-				if vMinorValue[i] > uMinorValue[i] {
+				if v.bytes[vIdx] > u.bytes[uIdx] {
 					return 1
 				}
 				return -1
 			}
+		} else if vMinor == vMajor && u.bytes[uIdx] == '0' {
+			return 0
+		} else if uMinor == uMajor && v.bytes[vIdx] == '0' {
+			return 0
 		} else if la > lb {
 			return 1
 		} else {
 			return -1
 		}
 	}
-	vPatchValue := zero[:]
 	vPatch := v.patch
-	if vPatch > vMinor {
-		vPatchValue = v.bytes[vMinor+1 : vPatch]
-	}
-	uPatchValue := zero[:]
 	uPatch := u.patch
-	if uPatch > uMinor {
-		uPatchValue = u.bytes[uMinor+1 : uPatch]
-	}
+	vIdx = vMinor + 1
+	uIdx = uMinor + 1
 	{
-		la := len(vPatchValue)
-		lb := len(uPatchValue)
+		la := vPatch - vMinor - 1
+		lb := uPatch - uMinor - 1
 		if la == lb {
-			for i := range vPatchValue {
-				if vPatchValue[i] == uPatchValue[i] {
+			for vIdx < vPatch {
+				if v.bytes[vIdx] == u.bytes[uIdx] {
+					vIdx++
+					uIdx++
 					continue
 				}
-				if vPatchValue[i] > uPatchValue[i] {
+				if v.bytes[vIdx] > u.bytes[uIdx] {
 					return 1
 				}
 				return -1
 			}
+		} else if vPatch == vMinor && u.bytes[uIdx] == '0' {
+			return 0
+		} else if uPatch == uMinor && v.bytes[vIdx] == '0' {
+			return 0
 		} else if la > lb {
 			return 1
 		} else {
@@ -231,8 +229,8 @@ func (v *Version) CompareTo(u *Version) int {
 	// if all of the preceding identifiers are equal.
 	// Example: 1.0.0-alpha < 1.0.0-alpha.1 < 1.0.0-alpha.beta < 1.0.0-beta <
 	//          < 1.0.0-beta.2 < 1.0.0-beta.11 < 1.0.0-rc.1 < 1.0.0.
-	vIdx := v.patch + 1
-	uIdx := u.patch + 1
+	vIdx = vPatch + 1
+	uIdx = uPatch + 1
 	vLast := v.prerelease
 	uLast := u.prerelease
 	vIsAlpha := false
