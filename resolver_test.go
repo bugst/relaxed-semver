@@ -129,11 +129,12 @@ func TestResolver(t *testing.T) {
 		b131, b130, b121, b120, b111, b110, b100,
 		c200, c120, c111, c110, c102, c101, c100, c021, c020, c010,
 		d100, d120,
-		e100, e101,
 		g130, g140, g150, g160, g170, g180,
 		h130, h140, h150, h160, h170, h180,
 		i130, i140, i150, i160, i170, i180,
 	)
+	arch.AddRelease(e100) // use this method for 100% code coverage
+	arch.AddRelease(e101)
 
 	a130 := rel("A", "1.3.0", deps())
 	r0 := arch.Resolve(a130) // Non-existent in archive
