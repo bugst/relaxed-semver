@@ -36,6 +36,10 @@ func TestJSONParseVersion(t *testing.T) {
 
 	err = json.Unmarshal([]byte(`123`), &u)
 	require.Error(t, err)
+
+	require.NoError(t, json.Unmarshal([]byte(`"1.6.2"`), &v))
+	require.NoError(t, json.Unmarshal([]byte(`"1.6.3"`), &u))
+	require.True(t, u.GreaterThan(v))
 }
 
 func TestJSONParseRelaxedVersion(t *testing.T) {

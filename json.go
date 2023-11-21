@@ -27,6 +27,7 @@ func (v *Version) UnmarshalJSON(data []byte) error {
 	}
 
 	v.raw = parsed.raw
+	v.bytes = []byte(v.raw)
 	v.major = parsed.major
 	v.minor = parsed.minor
 	v.patch = parsed.patch

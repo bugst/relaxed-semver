@@ -53,6 +53,7 @@ func (v *Version) UnmarshalBinary(data []byte) error {
 
 	buff, data = decodeArray(data)
 	v.raw = string(buff)
+	v.bytes = []byte(v.raw)
 	v.major, data = decodeInt(data)
 	v.minor, data = decodeInt(data)
 	v.patch, data = decodeInt(data)

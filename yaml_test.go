@@ -42,6 +42,10 @@ func TestYAMLParseVersion(t *testing.T) {
 
 	err = yaml.Unmarshal([]byte(`invalid:`), &u)
 	require.Error(t, err)
+
+	require.NoError(t, yaml.Unmarshal([]byte(`"1.6.2"`), &v))
+	require.NoError(t, yaml.Unmarshal([]byte(`"1.6.3"`), &u))
+	require.True(t, u.GreaterThan(v))
 }
 
 func TestYAMLParseRelaxedVersion(t *testing.T) {

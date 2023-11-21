@@ -35,6 +35,18 @@ func TestGOBEncoderVersion(t *testing.T) {
 
 	require.Equal(t, dumpV, dumpU)
 	require.Equal(t, testVersion, u.String())
+
+	{
+		dataV := new(bytes.Buffer)
+		dataU := new(bytes.Buffer)
+		require.NoError(t, gob.NewEncoder(dataV).Encode(MustParse("1.6.2")))
+		require.NoError(t, gob.NewEncoder(dataU).Encode(MustParse("1.6.3")))
+
+		var v, u *Version
+		require.NoError(t, gob.NewDecoder(dataV).Decode(&v))
+		require.NoError(t, gob.NewDecoder(dataU).Decode(&u))
+		require.True(t, u.GreaterThan(v))
+	}
 }
 
 func TestGOBEncoderRelaxedVersion(t *testing.T) {
