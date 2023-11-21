@@ -48,6 +48,11 @@ func (set Releases[R, D]) SortDescent() {
 // dependency resolution
 type Resolver[R Release[D], D Dependency] struct {
 	releases map[string]Releases[R, D]
+
+	// resolver state
+	solution        map[string]R
+	depsToProcess   []D
+	problematicDeps map[dependencyHash]int
 }
 
 // NewResolver creates a new archive
@@ -75,9 +80,9 @@ func (ar *Resolver[R, D]) AddReleases(rels ...R) {
 // arguent using a backtracking algorithm. This function is NOT thread-safe.
 func (ar *Resolver[R, D]) Resolve(release R) Releases[R, D] {
 	// Initial empty state of the resolver
-	solution := map[string]R{}
-	depsToProcess := []D{}
-	problematicDeps := map[dependencyHash]int{}
+	ar.solution = map[string]R{}
+	ar.depsToProcess = []D{}
+	ar.problematicDeps = map[dependencyHash]int{}
 
 	// Check if the release is in the archive
 	if len(ar.releases[release.GetName()].FilterBy(&Equals{Version: release.GetVersion()})) == 0 {
@@ -86,9 +91,9 @@ func (ar *Resolver[R, D]) Resolve(release R) Releases[R, D] {
 
 	// Add the requested release to the solution and proceed
 	// with the dependencies resolution
-	solution[release.GetName()] = release
-	depsToProcess = append(depsToProcess, release.GetDependencies()...)
-	return ar.resolve(solution, depsToProcess, problematicDeps)
+	ar.solution[release.GetName()] = release
+	ar.depsToProcess = append(ar.depsToProcess, release.GetDependencies()...)
+	return ar.resolve()
 }
 
 type dependencyHash string
@@ -97,39 +102,45 @@ func hashDependency[D Dependency](dep D) dependencyHash {
 	return dependencyHash(dep.GetName() + "/" + dep.GetConstraint().String())
 }
 
-func (ar *Resolver[R, D]) resolve(solution map[string]R, depsToProcess []D, problematicDeps map[dependencyHash]int) Releases[R, D] {
-	debug("deps to process: %s", depsToProcess)
-	if len(depsToProcess) == 0 {
+func (ar *Resolver[R, D]) resolve() Releases[R, D] {
+	debug("deps to process: %s", ar.depsToProcess)
+	if len(ar.depsToProcess) == 0 {
 		debug("All dependencies have been resolved.")
 		var res Releases[R, D]
-		for _, v := range solution {
+		for _, v := range ar.solution {
 			res = append(res, v)
 		}
 		return res
 	}
 
 	// Pick the first dependency in the deps to process
-	dep := depsToProcess[0]
+	dep := ar.depsToProcess[0]
 	depName := dep.GetName()
 	debug("Considering next dep: %s", depName)
 
 	// If a release is already picked in the solution check if it match the dep
-	if existingRelease, has := solution[depName]; has {
+	if existingRelease, has := ar.solution[depName]; has {
 		if dep.GetConstraint().Match(existingRelease.GetVersion()) {
 			debug("%s already in solution and matching", existingRelease)
-			return ar.resolve(solution, depsToProcess[1:], problematicDeps)
+			oldDepsToProcess := ar.depsToProcess
+			ar.depsToProcess = ar.depsToProcess[1:]
+			if res := ar.resolve(); res != nil {
+				return res
+			}
+			ar.depsToProcess = oldDepsToProcess
+			return nil
 		}
 		debug("%s already in solution do not match... rollingback", existingRelease)
 		return nil
 	}
 
 	// Otherwise start backtracking the dependency
-	releases := ar.releases[dep.GetName()].FilterBy(dep.GetConstraint())
+	releases := ar.releases[depName].FilterBy(dep.GetConstraint())
 
 	// Consider the latest versions first
 	releases.SortDescent()
-
 	debug("releases matching criteria: %s", releases)
+
 backtracking_loop:
 	for _, release := range releases {
 		releaseDeps := release.GetDependencies()
@@ -142,21 +153,23 @@ backtracking_loop:
 			}
 		}
 
-		solution[depName] = release
-		newDepsToProcess := append(depsToProcess[1:], deps...)
+		ar.solution[depName] = release
+		oldDepsToProcess := ar.depsToProcess
+		ar.depsToProcess = append(ar.depsToProcess[1:], releaseDeps...)
 		// bubble up problematics deps so they are processed first
-		sort.Slice(newDepsToProcess, func(i, j int) bool {
-			ci := hashDependency(newDepsToProcess[i])
-			cj := hashDependency(newDepsToProcess[j])
-			return problematicDeps[ci] > problematicDeps[cj]
+		sort.Slice(ar.depsToProcess, func(i, j int) bool {
+			ci := hashDependency(ar.depsToProcess[i])
+			cj := hashDependency(ar.depsToProcess[j])
+			return ar.problematicDeps[ci] > ar.problematicDeps[cj]
 		})
-		if res := ar.resolve(solution, newDepsToProcess, problematicDeps); res != nil {
+		if res := ar.resolve(); res != nil {
 			return res
 		}
+		ar.depsToProcess = oldDepsToProcess
 		debug("%s did not work...", release)
-		delete(solution, depName)
+		delete(ar.solution, depName)
 	}
 
-	problematicDeps[hashDependency(dep)]++
+	ar.problematicDeps[hashDependency(dep)]++
 	return nil
 }
