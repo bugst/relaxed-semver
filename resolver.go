@@ -44,26 +44,27 @@ func (set Releases[R, D]) SortDescent() {
 	})
 }
 
-// Archive contains all Releases set to consider for dependency resolution
-type Archive[R Release[D], D Dependency] struct {
+// Resolver is a container with references to all Releases to consider for
+// dependency resolution
+type Resolver[R Release[D], D Dependency] struct {
 	releases map[string]Releases[R, D]
 }
 
-// NewArchive creates a new archive
-func NewArchive[R Release[D], D Dependency]() *Archive[R, D] {
-	return &Archive[R, D]{
+// NewResolver creates a new archive
+func NewResolver[R Release[D], D Dependency]() *Resolver[R, D] {
+	return &Resolver[R, D]{
 		releases: map[string]Releases[R, D]{},
 	}
 }
 
 // AddRelease adds a release to this archive
-func (ar *Archive[R, D]) AddRelease(rel R) {
+func (ar *Resolver[R, D]) AddRelease(rel R) {
 	relName := rel.GetName()
 	ar.releases[relName] = append(ar.releases[relName], rel)
 }
 
 // AddReleases adds all the releases to this archive
-func (ar *Archive[R, D]) AddReleases(rels ...R) {
+func (ar *Resolver[R, D]) AddReleases(rels ...R) {
 	for _, rel := range rels {
 		relName := rel.GetName()
 		ar.releases[relName] = append(ar.releases[relName], rel)
@@ -71,8 +72,8 @@ func (ar *Archive[R, D]) AddReleases(rels ...R) {
 }
 
 // Resolve will try to depp-resolve dependencies from the Release passed as
-// arguent using a backtracking algorithm.
-func (ar *Archive[R, D]) Resolve(release R) Releases[R, D] {
+// arguent using a backtracking algorithm. This function is NOT thread-safe.
+func (ar *Resolver[R, D]) Resolve(release R) Releases[R, D] {
 	// Initial empty state of the resolver
 	solution := map[string]R{}
 	depsToProcess := []D{}
@@ -96,7 +97,7 @@ func hashDependency[D Dependency](dep D) dependencyHash {
 	return dependencyHash(dep.GetName() + "/" + dep.GetConstraint().String())
 }
 
-func (ar *Archive[R, D]) resolve(solution map[string]R, depsToProcess []D, problematicDeps map[dependencyHash]int) Releases[R, D] {
+func (ar *Resolver[R, D]) resolve(solution map[string]R, depsToProcess []D, problematicDeps map[dependencyHash]int) Releases[R, D] {
 	debug("deps to process: %s", depsToProcess)
 	if len(depsToProcess) == 0 {
 		debug("All dependencies have been resolved.")

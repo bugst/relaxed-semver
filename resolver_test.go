@@ -123,7 +123,7 @@ func TestResolver(t *testing.T) {
 	i160 := rel("I", "1.6.0", deps())
 	i170 := rel("I", "1.7.0", deps())
 	i180 := rel("I", "1.8.0", deps())
-	arch := NewArchive[*customRel, *customDep]()
+	arch := NewResolver[*customRel, *customDep]()
 	arch.AddReleases(
 		a100, a110, a111, a120, a121,
 		b131, b130, b121, b120, b111, b110, b100,
