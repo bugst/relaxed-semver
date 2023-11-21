@@ -130,20 +130,16 @@ func (ar *Resolver[R, D]) resolve(solution map[string]R, depsToProcess []D, prob
 	releases.SortDescent()
 
 	debug("releases matching criteria: %s", releases)
+backtracking_loop:
 	for _, release := range releases {
-		deps := release.GetDependencies()
-		debug("try with %s %s", release, deps)
+		releaseDeps := release.GetDependencies()
+		debug("try with %s %s", release, releaseDeps)
 
-		missingDep := false
-		for _, dep := range deps {
-			if _, ok := ar.releases[dep.GetName()]; !ok {
-				debug("%s did not work, becuase his dependency %s does not exists", release, dep.GetName())
-				missingDep = true
-				break
+		for _, releaseDep := range releaseDeps {
+			if _, ok := ar.releases[releaseDep.GetName()]; !ok {
+				debug("%s did not work, becuase his dependency %s does not exists", release, releaseDep.GetName())
+				continue backtracking_loop
 			}
-		}
-		if missingDep {
-			continue
 		}
 
 		solution[depName] = release
