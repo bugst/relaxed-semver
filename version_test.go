@@ -31,7 +31,7 @@ func ascending(t *testing.T, allowEqual bool, list ...string) {
 			require.False(t, a.GreaterThan(b))
 		} else {
 			fmt.Printf("%s %s %s\n", list[i], sign[comp], list[i+1])
-			require.Equal(t, comp, -1)
+			require.Equal(t, comp, -1, "cmp(%s, %s) must return '<', but returned '%s'", list[i], list[i+1], sign[comp])
 			require.True(t, a.LessThan(b))
 			require.True(t, a.LessThanOrEqual(b))
 			require.False(t, a.Equal(b))
@@ -42,7 +42,7 @@ func ascending(t *testing.T, allowEqual bool, list ...string) {
 		comp = b.CompareTo(a)
 		fmt.Printf("%s %s %s\n", b, sign[comp], a)
 		if allowEqual {
-			require.GreaterOrEqual(t, comp, 0)
+			require.GreaterOrEqual(t, comp, 0, "cmp(%s, %s) must return '>=', but returned '%s'", b, a, sign[comp])
 			require.False(t, b.LessThan(a))
 			require.True(t, b.GreaterThanOrEqual(a))
 		} else {
@@ -102,6 +102,16 @@ func TestVersionComparator(t *testing.T) {
 		"1.20.0",
 		"2.1.1",
 		"10.0.0",
+		"17.3.0-atmel3.6.1-arduino7",
+		"17.3.0-atmel3.6.1-arduino7not",
+		"17.3.0-atmel3.6.1-beduino8",
+		"17.3.0-atmel3.6.1-beduino8not",
+		"17.3.0-atmel3a.6.1-arduino7",
+		"17.3.0-atmel3a.16.2.arduino7",
+		"17.3.0-atmel3a.16.12.arduino7",
+		"17.3.0-atmel3a.16.1-arduino7",
+		"17.3.0-atmel3a.16.12-arduino7",
+		"17.3.0-atmel3a.16.2-arduino7",
 	)
 	equal(
 		MustParse(""),

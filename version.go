@@ -288,7 +288,14 @@ func (v *Version) CompareTo(u *Version) int {
 		// Numeric identifiers always have lower precedence than non-numeric identifiers.
 		if vIsAlpha && uIsAlpha {
 			if cmp != 0 {
+				// alphanumeric vs alphanumeric, sorting has priority
 				return cmp
+			} else if vIsLonger {
+				// alphanumeric vs alphanumeric, v is longer, return >
+				return 1
+			} else if uIsLonger {
+				// alphanumeric vs alphanumeric, u is longer, return <
+				return -1
 			}
 			// Both alphanumeric, if comparison is equal, move on the next field
 		} else if vIsAlpha && !uIsAlpha {
@@ -297,15 +304,18 @@ func (v *Version) CompareTo(u *Version) int {
 		} else if !vIsAlpha && uIsAlpha {
 			// numeric vs alphanumeric, return <
 			return -1
-		} else if vIsLonger {
-			// numeric vs numeric, v is longer, return >
-			return 1
-		} else if uIsLonger {
-			// numeric vs numeric, u is longer, return <
-			return -1
-		} else if cmp != 0 {
-			// numeric vs numeric, return cmp if not equal
-			return cmp
+		} else {
+			if vIsLonger {
+				// numeric vs numeric, v is longer, return >
+				return 1
+			} else if uIsLonger {
+				// numeric vs numeric, u is longer, return <
+				return -1
+			} else if cmp != 0 {
+				// numeric vs numeric, return cmp if not equal
+				return cmp
+			}
+			// Both numeric, if comparison is equal, move on the next field
 		}
 
 		// A larger set of pre-release fields has a higher precedence than a smaller set,
