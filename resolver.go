@@ -15,24 +15,21 @@ type Dependency interface {
 }
 
 // Release represents a release, it must provide methods to return Name, Version and Dependencies
-type Release interface {
+type Release[D Dependency] interface {
 	GetName() string
 	GetVersion() *Version
-	GetDependencies() []Dependency
+	GetDependencies() []D
 }
 
-func match(r Release, dep Dependency) bool {
-	return r.GetName() == dep.GetName() && dep.GetConstraint().Match(r.GetVersion())
-}
+// Releases is a list of Release of the same package (all releases with
+// the same Name but different Version)
+type Releases[R Release[D], D Dependency] []R
 
-// Releases is a list of Release
-type Releases []Release
-
-// FilterBy return a subset of the Releases matching the provided Dependency
-func (set Releases) FilterBy(dep Dependency) Releases {
-	res := []Release{}
+// FilterBy return a subset of the Releases matching the provided Constraint
+func (set Releases[R, D]) FilterBy(c Constraint) Releases[R, D] {
+	var res Releases[R, D]
 	for _, r := range set {
-		if match(r, dep) {
+		if c.Match(r.GetVersion()) {
 			res = append(res, r)
 		}
 	}
@@ -41,108 +38,138 @@ func (set Releases) FilterBy(dep Dependency) Releases {
 
 // SortDescent sort the Releases in this set in descending order (the lastest
 // release is the first)
-func (set Releases) SortDescent() {
+func (set Releases[R, D]) SortDescent() {
 	sort.Slice(set, func(i, j int) bool {
 		return set[i].GetVersion().GreaterThan(set[j].GetVersion())
 	})
 }
 
-// Archive contains all Releases set to consider for dependency resolution
-type Archive struct {
-	Releases map[string]Releases
+// Resolver is a container with references to all Releases to consider for
+// dependency resolution
+type Resolver[R Release[D], D Dependency] struct {
+	releases map[string]Releases[R, D]
+
+	// resolver state
+	solution        map[string]R
+	depsToProcess   []D
+	problematicDeps map[dependencyHash]int
+}
+
+// NewResolver creates a new archive
+func NewResolver[R Release[D], D Dependency]() *Resolver[R, D] {
+	return &Resolver[R, D]{
+		releases: map[string]Releases[R, D]{},
+	}
+}
+
+// AddRelease adds a release to this archive
+func (ar *Resolver[R, D]) AddRelease(rel R) {
+	relName := rel.GetName()
+	ar.releases[relName] = append(ar.releases[relName], rel)
+}
+
+// AddReleases adds all the releases to this archive
+func (ar *Resolver[R, D]) AddReleases(rels ...R) {
+	for _, rel := range rels {
+		relName := rel.GetName()
+		ar.releases[relName] = append(ar.releases[relName], rel)
+	}
 }
 
 // Resolve will try to depp-resolve dependencies from the Release passed as
-// arguent using a backtracking algorithm.
-func (ar *Archive) Resolve(release Release) []Release {
-	mainDep := &bareDependency{
-		name:    release.GetName(),
-		version: release.GetVersion(),
+// arguent using a backtracking algorithm. This function is NOT thread-safe.
+func (ar *Resolver[R, D]) Resolve(release R) Releases[R, D] {
+	// Initial empty state of the resolver
+	ar.solution = map[string]R{}
+	ar.depsToProcess = []D{}
+	ar.problematicDeps = map[dependencyHash]int{}
+
+	// Check if the release is in the archive
+	if len(ar.releases[release.GetName()].FilterBy(&Equals{Version: release.GetVersion()})) == 0 {
+		return nil
 	}
-	return ar.resolve(map[string]Release{}, []Dependency{mainDep}, map[Dependency]int{})
+
+	// Add the requested release to the solution and proceed
+	// with the dependencies resolution
+	ar.solution[release.GetName()] = release
+	ar.depsToProcess = append(ar.depsToProcess, release.GetDependencies()...)
+	return ar.resolve()
 }
 
-type bareDependency struct {
-	name    string
-	version *Version
+type dependencyHash string
+
+func hashDependency[D Dependency](dep D) dependencyHash {
+	return dependencyHash(dep.GetName() + "/" + dep.GetConstraint().String())
 }
 
-func (b *bareDependency) GetName() string {
-	return b.name
-}
-
-func (b *bareDependency) GetConstraint() Constraint {
-	return &Equals{Version: b.version}
-}
-
-func (b *bareDependency) String() string {
-	return b.GetName() + b.GetConstraint().String()
-}
-
-func (ar *Archive) resolve(solution map[string]Release, depsToProcess []Dependency, problematicDeps map[Dependency]int) []Release {
-	debug("deps to process: %s", depsToProcess)
-	if len(depsToProcess) == 0 {
+func (ar *Resolver[R, D]) resolve() Releases[R, D] {
+	debug("deps to process: %s", ar.depsToProcess)
+	if len(ar.depsToProcess) == 0 {
 		debug("All dependencies have been resolved.")
-		res := []Release{}
-		for _, v := range solution {
+		var res Releases[R, D]
+		for _, v := range ar.solution {
 			res = append(res, v)
 		}
 		return res
 	}
 
 	// Pick the first dependency in the deps to process
-	dep := depsToProcess[0]
+	dep := ar.depsToProcess[0]
 	depName := dep.GetName()
 	debug("Considering next dep: %s", depName)
 
 	// If a release is already picked in the solution check if it match the dep
-	if existingRelease, has := solution[depName]; has {
-		if match(existingRelease, dep) {
+	if existingRelease, has := ar.solution[depName]; has {
+		if dep.GetConstraint().Match(existingRelease.GetVersion()) {
 			debug("%s already in solution and matching", existingRelease)
-			return ar.resolve(solution, depsToProcess[1:], problematicDeps)
+			oldDepsToProcess := ar.depsToProcess
+			ar.depsToProcess = ar.depsToProcess[1:]
+			if res := ar.resolve(); res != nil {
+				return res
+			}
+			ar.depsToProcess = oldDepsToProcess
+			return nil
 		}
 		debug("%s already in solution do not match... rollingback", existingRelease)
 		return nil
 	}
 
 	// Otherwise start backtracking the dependency
-	releases := ar.Releases[dep.GetName()].FilterBy(dep)
+	releases := ar.releases[depName].FilterBy(dep.GetConstraint())
 
 	// Consider the latest versions first
 	releases.SortDescent()
+	debug("releases matching criteria: %s", releases)
 
-	findMissingDeps := func(deps []Dependency) Dependency {
-		for _, dep := range deps {
-			if _, ok := ar.Releases[dep.GetName()]; !ok {
-				return dep
+backtracking_loop:
+	for _, release := range releases {
+		releaseDeps := release.GetDependencies()
+		debug("try with %s %s", release, releaseDeps)
+
+		for _, releaseDep := range releaseDeps {
+			if _, ok := ar.releases[releaseDep.GetName()]; !ok {
+				debug("%s did not work, becuase his dependency %s does not exists", release, releaseDep.GetName())
+				continue backtracking_loop
 			}
 		}
-		return nil
-	}
 
-	debug("releases matching criteria: %s", releases)
-	for _, release := range releases {
-		deps := release.GetDependencies()
-		debug("try with %s %s", release, deps)
-
-		if missingDep := findMissingDeps(deps); missingDep != nil {
-			debug("%s did not work, becuase his dependency %s does not exists", release, missingDep.GetName())
-			continue
-		}
-
-		solution[depName] = release
-		newDepsToProcess := append(depsToProcess[1:], deps...)
+		ar.solution[depName] = release
+		oldDepsToProcess := ar.depsToProcess
+		ar.depsToProcess = append(ar.depsToProcess[1:], releaseDeps...)
 		// bubble up problematics deps so they are processed first
-		sort.Slice(newDepsToProcess, func(i, j int) bool {
-			return problematicDeps[newDepsToProcess[i]] > problematicDeps[newDepsToProcess[j]]
+		sort.Slice(ar.depsToProcess, func(i, j int) bool {
+			ci := hashDependency(ar.depsToProcess[i])
+			cj := hashDependency(ar.depsToProcess[j])
+			return ar.problematicDeps[ci] > ar.problematicDeps[cj]
 		})
-		if res := ar.resolve(solution, newDepsToProcess, problematicDeps); res != nil {
+		if res := ar.resolve(); res != nil {
 			return res
 		}
+		ar.depsToProcess = oldDepsToProcess
 		debug("%s did not work...", release)
-		delete(solution, depName)
+		delete(ar.solution, depName)
 	}
 
-	problematicDeps[dep]++
+	ar.problematicDeps[hashDependency(dep)]++
 	return nil
 }

@@ -19,10 +19,12 @@ type customDep struct {
 	cond Constraint
 }
 
+// GetName return the name of the dependency (implements the Dependency interface)
 func (c *customDep) GetName() string {
 	return c.name
 }
 
+// GetConstraint return the version contraints of the dependency (implements the Dependency interface)
 func (c *customDep) GetConstraint() Constraint {
 	return c.cond
 }
@@ -34,18 +36,20 @@ func (c *customDep) String() string {
 type customRel struct {
 	name string
 	vers *Version
-	deps []Dependency
+	deps []*customDep
 }
 
+// GetName return the name of the release (implements the Release interface)
 func (r *customRel) GetName() string {
 	return r.name
 }
 
+// GetVersion return the version of the release (implements the Release interface)
 func (r *customRel) GetVersion() *Version {
 	return r.vers
 }
 
-func (r *customRel) GetDependencies() []Dependency {
+func (r *customRel) GetDependencies() []*customDep {
 	return r.deps
 }
 
@@ -53,7 +57,7 @@ func (r *customRel) String() string {
 	return r.name + "@" + r.vers.String()
 }
 
-func d(dep string) Dependency {
+func d(dep string) *customDep {
 	name := dep[0:1]
 	cond, err := ParseConstraint(dep[1:])
 	if err != nil {
@@ -62,15 +66,15 @@ func d(dep string) Dependency {
 	return &customDep{name: name, cond: cond}
 }
 
-func deps(deps ...string) []Dependency {
-	res := []Dependency{}
+func deps(deps ...string) []*customDep {
+	var res []*customDep
 	for _, dep := range deps {
 		res = append(res, d(dep))
 	}
 	return res
 }
 
-func rel(name, ver string, deps []Dependency) Release {
+func rel(name, ver string, deps []*customDep) *customRel {
 	return &customRel{name: name, vers: v(ver), deps: deps}
 }
 
@@ -119,18 +123,18 @@ func TestResolver(t *testing.T) {
 	i160 := rel("I", "1.6.0", deps())
 	i170 := rel("I", "1.7.0", deps())
 	i180 := rel("I", "1.8.0", deps())
-	arch := &Archive{
-		Releases: map[string]Releases{
-			"A": {a100, a110, a111, a120, a121},
-			"B": {b131, b130, b121, b120, b111, b110, b100},
-			"C": {c200, c120, c111, c110, c102, c101, c100, c021, c020, c010},
-			"D": {d100, d120},
-			"E": {e100, e101},
-			"G": {g130, g140, g150, g160, g170, g180},
-			"H": {h130, h140, h150, h160, h170, h180},
-			"I": {i130, i140, i150, i160, i170, i180},
-		},
-	}
+	arch := NewResolver[*customRel, *customDep]()
+	arch.AddReleases(
+		a100, a110, a111, a120, a121,
+		b131, b130, b121, b120, b111, b110, b100,
+		c200, c120, c111, c110, c102, c101, c100, c021, c020, c010,
+		d100, d120,
+		g130, g140, g150, g160, g170, g180,
+		h130, h140, h150, h160, h170, h180,
+		i130, i140, i150, i160, i170, i180,
+	)
+	arch.AddRelease(e100) // use this method for 100% code coverage
+	arch.AddRelease(e101)
 
 	a130 := rel("A", "1.3.0", deps())
 	r0 := arch.Resolve(a130) // Non-existent in archive
@@ -179,4 +183,7 @@ func TestResolver(t *testing.T) {
 	case <-time.After(time.Second):
 		require.FailNow(t, "test didn't complete in the allocated time")
 	}
+
+	r7 := arch.Resolve(e101)
+	require.Nil(t, r7)
 }
