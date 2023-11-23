@@ -19,34 +19,22 @@ func marshalByteArray(b []byte) []byte {
 	return res
 }
 
-func marshalInt(i int) []byte {
-	res := make([]byte, 4)
-	binary.BigEndian.PutUint32(res, uint32(i))
-	return res
-}
-
 // MarshalBinary implements binary custom encoding
 func (v *Version) MarshalBinary() ([]byte, error) {
+	// TODO could be preallocated without bytes.Buffer
 	res := new(bytes.Buffer)
-	_, _ = res.Write(marshalByteArray(v.major))
-	_, _ = res.Write(marshalByteArray(v.minor))
-	_, _ = res.Write(marshalByteArray(v.patch))
-	_, _ = res.Write(marshalInt(len(v.prerelases)))
-	for _, pre := range v.prerelases {
-		_, _ = res.Write(marshalByteArray(pre))
-	}
-	_, _ = res.Write(marshalInt(len(v.numericPrereleases)))
-	for _, npre := range v.numericPrereleases {
-		v := []byte{0}
-		if npre {
-			v[0] = 1
-		}
-		_, _ = res.Write(v)
-	}
-	_, _ = res.Write(marshalInt(len(v.builds)))
-	for _, build := range v.builds {
-		_, _ = res.Write(marshalByteArray(build))
-	}
+	intBuff := [4]byte{}
+	_, _ = res.Write(marshalByteArray([]byte(v.raw)))
+	binary.BigEndian.PutUint32(intBuff[:], uint32(v.major))
+	_, _ = res.Write(intBuff[:])
+	binary.BigEndian.PutUint32(intBuff[:], uint32(v.minor))
+	_, _ = res.Write(intBuff[:])
+	binary.BigEndian.PutUint32(intBuff[:], uint32(v.patch))
+	_, _ = res.Write(intBuff[:])
+	binary.BigEndian.PutUint32(intBuff[:], uint32(v.prerelease))
+	_, _ = res.Write(intBuff[:])
+	binary.BigEndian.PutUint32(intBuff[:], uint32(v.build))
+	_, _ = res.Write(intBuff[:])
 	return res.Bytes(), nil
 }
 
@@ -63,31 +51,14 @@ func decodeInt(data []byte) (int, []byte) {
 func (v *Version) UnmarshalBinary(data []byte) error {
 	var buff []byte
 
-	v.major, data = decodeArray(data)
-	v.minor, data = decodeArray(data)
-	v.patch, data = decodeArray(data)
-	n, data := decodeInt(data)
-	v.prerelases = nil
-	for i := 0; i < n; i++ {
-		buff, data = decodeArray(data)
-		v.prerelases = append(v.prerelases, buff)
-	}
-	v.numericPrereleases = nil
-	n, data = decodeInt(data)
-	for i := 0; i < n; i++ {
-		num := false
-		if data[0] == 1 {
-			num = true
-		}
-		v.numericPrereleases = append(v.numericPrereleases, num)
-		data = data[1:]
-	}
-	v.builds = nil
-	n, data = decodeInt(data)
-	for i := 0; i < n; i++ {
-		buff, data = decodeArray(data)
-		v.builds = append(v.builds, buff)
-	}
+	buff, data = decodeArray(data)
+	v.raw = string(buff)
+	v.bytes = []byte(v.raw)
+	v.major, data = decodeInt(data)
+	v.minor, data = decodeInt(data)
+	v.patch, data = decodeInt(data)
+	v.prerelease, data = decodeInt(data)
+	v.build, _ = decodeInt(data)
 	return nil
 }
 

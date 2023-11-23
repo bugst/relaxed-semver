@@ -32,11 +32,8 @@ func TestYAMLParseVersion(t *testing.T) {
 	err = yaml.Unmarshal(data, &u)
 	require.NoError(t, err)
 
-	dump := fmt.Sprintf("%s,%s,%s,%s,%v,%s",
-		u.major, u.minor, u.patch,
-		u.prerelases, u.numericPrereleases,
-		u.builds)
-	require.Equal(t, "1,2,3,[aaa 4 5 6],[false true true true],[bbb 7 8 9]", dump)
+	dump := fmt.Sprintf("%v,%v,%v,%v,%v,%v", u.raw, u.major, u.minor, u.patch, u.prerelease, u.build)
+	require.Equal(t, "1.2.3-aaa.4.5.6+bbb.7.8.9,1,3,5,15,25", dump)
 
 	require.Equal(t, testVersion, u.String())
 
@@ -45,6 +42,10 @@ func TestYAMLParseVersion(t *testing.T) {
 
 	err = yaml.Unmarshal([]byte(`invalid:`), &u)
 	require.Error(t, err)
+
+	require.NoError(t, yaml.Unmarshal([]byte(`"1.6.2"`), &v))
+	require.NoError(t, yaml.Unmarshal([]byte(`"1.6.3"`), &u))
+	require.True(t, u.GreaterThan(v))
 }
 
 func TestYAMLParseRelaxedVersion(t *testing.T) {
