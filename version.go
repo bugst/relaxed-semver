@@ -133,9 +133,9 @@ func (v *Version) CompareTo(u *Version) int {
 				return -1
 			}
 		} else if vMajor == 0 && u.bytes[uIdx] == '0' {
-			return 0
+			// continue
 		} else if uMajor == 0 && v.bytes[vIdx] == '0' {
-			return 0
+			// continue
 		} else if vMajor > uMajor {
 			return 1
 		} else {
@@ -162,9 +162,9 @@ func (v *Version) CompareTo(u *Version) int {
 				return -1
 			}
 		} else if vMinor == vMajor && u.bytes[uIdx] == '0' {
-			return 0
+			// continue
 		} else if uMinor == uMajor && v.bytes[vIdx] == '0' {
-			return 0
+			// continue
 		} else if la > lb {
 			return 1
 		} else {
