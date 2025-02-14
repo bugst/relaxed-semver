@@ -80,7 +80,19 @@ func TestVersionComparator(t *testing.T) {
 			}
 		}
 	}
+	ascending(t, false, "", "0.0.1")
+	ascending(t, false, "", "0.1")
+	ascending(t, false, "", "1")
+	ascending(t, false, "0", "0.0.1")
+	ascending(t, false, "0", "0.1")
+	ascending(t, false, "0", "1")
+	ascending(t, false, "0.0", "0.0.1")
+	ascending(t, false, "0.0", "0.1")
+	ascending(t, false, "0.0", "1")
 	ascending(t, false,
+		"",
+		"0.0.1",
+		"0.1",
 		"1.0.0-2",
 		"1.0.0-11",
 		"1.0.0-11a",
