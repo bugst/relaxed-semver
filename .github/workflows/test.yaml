@@ -37,6 +37,9 @@ jobs:
       - name: Run unit tests with coverage
         run: go test -v -race -covermode=atomic -coverprofile=coverage.out ./...
         shell: bash
-      - uses: codecov/codecov-action@v2
+      - uses: codecov/codecov-action@v5
         with:
           verbose: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        
