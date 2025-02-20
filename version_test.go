@@ -7,6 +7,7 @@
 package semver
 
 import (
+	"cmp"
 	"fmt"
 	"testing"
 
@@ -52,6 +53,41 @@ func ascending(t *testing.T, allowEqual bool, list ...string) {
 			require.False(t, b.Equal(a))
 			require.True(t, b.GreaterThanOrEqual(a))
 			require.True(t, b.GreaterThan(a))
+		}
+	}
+
+	for i := range list[0 : len(list)-1] {
+		a := MustParse(list[i]).SortableString()
+		b := MustParse(list[i+1]).SortableString()
+		comp := cmp.Compare(a, b)
+		if allowEqual {
+			fmt.Printf("%s %s= %s\n", list[i], sign[comp], list[i+1])
+			require.LessOrEqual(t, comp, 0)
+			require.True(t, a <= b)
+			require.False(t, a > b)
+		} else {
+			fmt.Printf("%s %s %s\n", list[i], sign[comp], list[i+1])
+			require.Equal(t, comp, -1, "cmp(%s, %s) (%s, %s) must return '<', but returned '%s'", list[i], list[i+1], a, b, sign[comp])
+			require.True(t, a < b)
+			require.True(t, a <= b)
+			require.False(t, a == b)
+			require.False(t, a >= b)
+			require.False(t, a > b)
+		}
+
+		comp = cmp.Compare(b, a)
+		fmt.Printf("%s %s %s\n", b, sign[comp], a)
+		if allowEqual {
+			require.GreaterOrEqual(t, comp, 0, "cmp(%s, %s) must return '>=', but returned '%s'", b, a, sign[comp])
+			require.False(t, b < a)
+			require.True(t, b >= a)
+		} else {
+			require.Equal(t, comp, 1)
+			require.False(t, b < a)
+			require.False(t, b <= a)
+			require.False(t, b == a)
+			require.True(t, b >= a)
+			require.True(t, b > a)
 		}
 	}
 }
@@ -124,6 +160,10 @@ func TestVersionComparator(t *testing.T) {
 		"17.3.0-atmel3a.16.1-arduino7",
 		"17.3.0-atmel3a.16.12-arduino7",
 		"17.3.0-atmel3a.16.2-arduino7",
+		"34.0.0",
+		"51.0.0",
+		"99.0.0",
+		"123.0.0",
 	)
 	equal(
 		MustParse(""),
