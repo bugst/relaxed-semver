@@ -7,6 +7,7 @@
 package semver
 
 import (
+	"cmp"
 	"fmt"
 	"testing"
 
@@ -17,47 +18,93 @@ func TestRelaxedVersionComparator(t *testing.T) {
 	sign := map[int]string{1: ">", 0: "=", -1: "<"}
 	ascending := func(list ...*RelaxedVersion) {
 		for i := range list[0 : len(list)-1] {
-			a := list[i]
-			b := list[i+1]
-			comp := a.CompareTo(b)
-			fmt.Printf("%s %s %s\n", a, sign[comp], b)
-			require.Equal(t, comp, -1)
-			require.True(t, a.LessThan(b))
-			require.True(t, a.LessThanOrEqual(b))
-			require.False(t, a.Equal(b))
-			require.False(t, a.GreaterThanOrEqual(b))
-			require.False(t, a.GreaterThan(b))
+			{
+				a := list[i]
+				b := list[i+1]
+				comp := a.CompareTo(b)
+				fmt.Printf("%s %s %s\n", a, sign[comp], b)
+				require.Equal(t, comp, -1)
+				require.True(t, a.LessThan(b))
+				require.True(t, a.LessThanOrEqual(b))
+				require.False(t, a.Equal(b))
+				require.False(t, a.GreaterThanOrEqual(b))
+				require.False(t, a.GreaterThan(b))
 
-			comp = b.CompareTo(a)
-			fmt.Printf("%s %s %s\n", b, sign[comp], a)
-			require.Equal(t, comp, 1)
-			require.False(t, b.LessThan(a))
-			require.False(t, b.LessThanOrEqual(a))
-			require.False(t, b.Equal(a))
-			require.True(t, b.GreaterThanOrEqual(a))
-			require.True(t, b.GreaterThan(a))
+				comp = b.CompareTo(a)
+				fmt.Printf("%s %s %s\n", b, sign[comp], a)
+				require.Equal(t, comp, 1)
+				require.False(t, b.LessThan(a))
+				require.False(t, b.LessThanOrEqual(a))
+				require.False(t, b.Equal(a))
+				require.True(t, b.GreaterThanOrEqual(a))
+				require.True(t, b.GreaterThan(a))
+			}
+			{
+				a := list[i].SortableString()
+				b := list[i+1].SortableString()
+				comp := cmp.Compare(a, b)
+				fmt.Printf("%s %s %s\n", a, sign[comp], b)
+				require.Equal(t, comp, -1)
+				require.True(t, a < b)
+				require.True(t, a <= b)
+				require.False(t, a == b)
+				require.False(t, a >= b)
+				require.False(t, a > b)
+
+				comp = cmp.Compare(b, a)
+				fmt.Printf("%s %s %s\n", b, sign[comp], a)
+				require.Equal(t, comp, 1)
+				require.False(t, b < a)
+				require.False(t, b <= a)
+				require.False(t, b == a)
+				require.True(t, b >= a)
+				require.True(t, b > a)
+			}
 		}
 	}
 	equal := func(list ...*RelaxedVersion) {
 		for _, a := range list {
 			for _, b := range list {
-				comp := a.CompareTo(b)
-				fmt.Printf("%s %s %s\n", a, sign[comp], b)
-				require.Equal(t, comp, 0)
-				require.False(t, a.LessThan(b))
-				require.True(t, a.LessThanOrEqual(b))
-				require.True(t, a.Equal(b))
-				require.True(t, a.GreaterThanOrEqual(b))
-				require.False(t, a.GreaterThan(b))
+				{
+					comp := a.CompareTo(b)
+					fmt.Printf("%s %s %s\n", a, sign[comp], b)
+					require.Equal(t, comp, 0)
+					require.False(t, a.LessThan(b))
+					require.True(t, a.LessThanOrEqual(b))
+					require.True(t, a.Equal(b))
+					require.True(t, a.GreaterThanOrEqual(b))
+					require.False(t, a.GreaterThan(b))
 
-				comp = b.CompareTo(a)
-				fmt.Printf("%s %s %s\n", b, sign[comp], a)
-				require.Equal(t, comp, 0)
-				require.False(t, b.LessThan(a))
-				require.True(t, b.LessThanOrEqual(a))
-				require.True(t, b.Equal(a))
-				require.True(t, b.GreaterThanOrEqual(a))
-				require.False(t, b.GreaterThan(a))
+					comp = b.CompareTo(a)
+					fmt.Printf("%s %s %s\n", b, sign[comp], a)
+					require.Equal(t, comp, 0)
+					require.False(t, b.LessThan(a))
+					require.True(t, b.LessThanOrEqual(a))
+					require.True(t, b.Equal(a))
+					require.True(t, b.GreaterThanOrEqual(a))
+					require.False(t, b.GreaterThan(a))
+				}
+				{
+					a := a.SortableString()
+					b := b.SortableString()
+					comp := cmp.Compare(a, b)
+					fmt.Printf("%s %s %s\n", a, sign[comp], b)
+					require.Equal(t, comp, 0)
+					require.False(t, a < b)
+					require.True(t, a <= b)
+					require.True(t, a == b)
+					require.True(t, a >= b)
+					require.False(t, a > b)
+
+					comp = cmp.Compare(b, a)
+					fmt.Printf("%s %s %s\n", b, sign[comp], a)
+					require.Equal(t, comp, 0)
+					require.False(t, b < a)
+					require.True(t, b <= a)
+					require.True(t, b == a)
+					require.True(t, b >= a)
+					require.False(t, b > a)
+				}
 			}
 		}
 	}
