@@ -480,7 +480,10 @@ func (v *Version) SortableString() string {
 	for curr, c := range prerelease {
 		if c == '.' {
 			add(prerelease[start:curr])
-			res += "."
+			// separate the pre-release pieces with a "," to ensure the correct ordering
+			// of the pre-release pieces (the separator must be lower than any other allowed
+			// character [a-zA-Z0-9-]).
+			res += ","
 			start = curr + 1
 			continue
 		}
