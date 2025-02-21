@@ -95,3 +95,35 @@ The `Version` and `RelaxedVersion` provides optimized `MarshalBinary`/`Unmarshal
 ## Yaml parsable with `gopkg.in/yaml.v3`
 
 The `Version` and `RelaxedVersion` have the YAML un/marshaler implemented so they can be YAML decoded/encoded with the excellent `gopkg.in/yaml.v3` library.
+
+## Lexicographic sortable strings that keeps semantic versioning order
+
+The `Version` and `RelaxedVersion` objects provides the `SortableString()` method that returns a string with a peculiar property: the alphanumeric sorting of two `Version.SortableString()` matches the semantic versioning ordering of the underling `Version` objects. In other words, given two `Version` object `a` and `b`:
+* if `a.LessThan(b)` is true then `a.SortableString() < b.SortableString()` is true and vice-versa.
+* if `a.Equals(b)` is true then `a.SortableString() == b.SortableString()` is true and vice-versa.
+* more generally, the following assertion is always true: `a.CompareTo(b) == cmp.Compare(a.SortableString(), b.SortableString())`
+
+This is accomplished by adding some adjustment characters to the original semver `Version` string with the purpose to change the behaviour of the natural alphabetic ordering, in particular:
+* to allow comparison of numeric values (keeping digits aligned by unit, tenths, hundhereds, etc...).
+* to invert the ordering of versions with and without prelease (a version with prelease should be lower priority compared to the same version without prerelease, but being longer alphanumerically it naturally follows it).
+
+To give you an idea on how it works, the following table shows some examples of semver versions and their `SortableString` counter part:
+
+| semver             | `SortableString()` |
+| ------------------ | ------------------ |
+| `1.2.4`            | `1.2.4;`           |
+| `1.3.0-rc`         | `1.3.0-;rc`        |
+| `1.3.0-rc.0`       | `1.3.0-;rc.:0`     |
+| `1.3.0-rc.5`       | `1.3.0-;rc.:5`     |
+| `1.3.0-rc.5+build` | `1.3.0-;rc.:5`     |
+| `1.3.0-rc.20`      | `1.3.0-;rc.::20`   |
+| `1.3.0`            | `1.3.0;`           |
+| `1.20.0`           | `1.:20.0;`         |
+| `1.90.0`           | `1.:90.0;`         |
+| `1.300.0-6`        | `1.::300.0-:6`     |
+| `1.300.0-30`       | `1.::300.0-::30`   |
+| `1.300.0-1pre`     | `1.::300.0-;1pre`  |
+| `1.300.0-pre`      | `1.::300.0-;pre`   |
+| `1.300.0`          | `1.::300.0;`       |
+
+The `SortableString()` can be used in SQL databases to simplify the ordering of a set of versions in a table.
