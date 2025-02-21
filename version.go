@@ -69,6 +69,7 @@ func (v *Version) Normalize() {
 		v.prerelease += 2
 		v.build += 2
 	}
+	v.bytes = []byte(v.raw)
 }
 
 func compareNumber(a, b []byte) int {
