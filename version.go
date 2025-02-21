@@ -192,9 +192,9 @@ func (v *Version) CompareTo(u *Version) int {
 				return -1
 			}
 		} else if vPatch == vMinor && u.bytes[uIdx] == '0' {
-			return 0
+			// continue
 		} else if uPatch == uMinor && v.bytes[vIdx] == '0' {
-			return 0
+			// continue
 		} else if la > lb {
 			return 1
 		} else {
