@@ -7,7 +7,11 @@
 package semver
 
 import (
+	"cmp"
+	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func FuzzParser(f *testing.F) {
@@ -147,5 +151,71 @@ func FuzzParser(f *testing.F) {
 		if v.CompareTo(v) != 0 {
 			t.Fatalf("compare != 0 while comparing with self (in=%v)", in)
 		}
+	})
+}
+
+func FuzzComparators(f *testing.F) {
+	f.Add("1.2.4", "0.0.1-rc.0")
+	f.Add("1.3.0-rc.0+build", "0.0.1-rc.0+build")
+	f.Add("1.3.0", "0.0.1-rc.1")
+	f.Add("1.3.0+build", "0.0.1")
+	f.Add("0.0.1+build", "0.0.1-rc.0")
+	f.Add("0.0.2-rc.1", "0.0.1-rc.0+build")
+	f.Add("0.0.2-rc.1+build", "0.0.1-rc.1")
+	f.Add("0.0.2", "0.0.1")
+	f.Add("0.0.2+build", "0.0.1+build")
+	f.Add("0.0.3-rc.1", "0.0.2-rc.1")
+	f.Add("0.0.3-rc.2", "0.0.2-rc.1+build")
+	f.Add("0.0.3", "0.0.2")
+	f.Add("0.1.0", "0.0.2+build")
+	f.Add("0.3.3-rc.0", "0.0.3-rc.1")
+	f.Add("0.3.3-rc.1", "0.0.3-rc.2")
+	f.Add("0.3.3", "0.0.3")
+	f.Add("0.3.3+build", "0.1.0")
+	f.Add("0.3.4-rc.1", "0.3.3-rc.0")
+	f.Add("0.3.4", "0.3.3-rc.1")
+	f.Add("0.4.0", "0.3.3")
+	f.Add("1.0.0-rc", "0.3.3+build")
+	f.Add("1.0.0", "0.3.4-rc.1")
+	f.Add("1.0.0+build", "0.3.4")
+	f.Add("1.2.1-rc", "0.4.0")
+	f.Add("1.2.1", "1.0.0-rc")
+	f.Add("1.2.1+build", "1.0.0")
+	f.Add("1.2.3-rc.2", "1.0.0+build")
+	f.Add("1.2.3-rc.2+build", "1.2.1-rc")
+	f.Add("1.2.3", "1.2.1")
+	f.Add("1.2.3+build", "1.2.1+build")
+	f.Add("1.2.4", "1.2.3-rc.2")
+	f.Add("1.3.0-rc.0+build", "1.2.3-rc.2+build")
+	f.Add("1.3.0", "1.2.3")
+	f.Add("1.3.0+build", "1.2.3+build")
+	f.Add("1.3.1-rc.0", "1.2.4")
+	f.Add("1.3.1-rc.1", "1.3.0-rc.0+build")
+	f.Add("1.3.1", "1.3.0")
+	f.Add("1.3.5", "1.3.0+build")
+	f.Add("2.0.0-rc", "1.3.1-rc.0")
+	f.Add("2.0.0-rc+build", "1.3.1-rc.1")
+	f.Add("2.0.0", "1.3.1")
+	f.Add("2.0.0+build", "1.3.5")
+	f.Add("2.1.0-rc", "2.0.0-rc")
+	f.Add("2.1.0-rc+build", "2.0.0-rc+build")
+	f.Add("2.1.0", "2.0.0")
+	f.Add("2.1.0+build", "2.0.0+build")
+	f.Add("2.1.3-rc", "2.1.0-rc")
+	f.Add("2.1.3", "2.1.0-rc+build")
+	f.Add("2.3.0", "2.1.0")
+	f.Add("2.3.1", "2.1.0+build")
+	f.Add("3.0.0", "2.1.3-rc")
+	f.Fuzz(func(t *testing.T, a, b string) {
+		va, err := Parse(a)
+		if err != nil {
+			return
+		}
+		vb, err := Parse(b)
+		if err != nil {
+			return
+		}
+		fmt.Println(va.SortableString(), vb.SortableString())
+		require.Equal(t, va.CompareTo(vb), cmp.Compare(va.SortableString(), vb.SortableString()), "Comparing: %s and %s", a, b)
 	})
 }
