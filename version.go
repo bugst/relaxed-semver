@@ -416,3 +416,77 @@ func (v *Version) CompatibleWith(u *Version) bool {
 	}
 	return compareNumber(vPatch, uPatch) == 0
 }
+
+// SortableString returns the version encoded as a string that when compared
+// with alphanumeric ordering it respects the original semver ordering:
+//
+//	(v1.SortableString() < v2.SortableString()) == v1.LessThan(v2)
+//	cmp.Compare[string](v1.SortableString(), v2.SortableString()) == v1.CompareTo(v2)
+//
+// This may turn out useful when the version is saved in a database or is
+// introduced in a system that doesn't support semver ordering.
+func (v *Version) SortableString() string {
+	// Encode a number in a string that when compared as string it respects
+	// the original numeric order.
+	// To allow longer numbers to be compared correctly, a prefix of ":"s
+	// with the length of the number is added minus 1.
+	// For example: 123 -> "::123"
+	//              45  -> ":45"
+	// The number written as string compare as ("123" < "99") but the encoded
+	// version keeps the original integer ordering ("::123" > ":99").
+	encodeNumber := func(in []byte) string {
+		if len(in) == 0 {
+			return "0"
+		}
+		p := ""
+		for range in {
+			p += ":"
+		}
+		return p[:len(p)-1] + string(in)
+	}
+
+	var vMajor, vMinor, vPatch []byte
+	vMajor = v.bytes[:v.major]
+	if v.minor > v.major {
+		vMinor = v.bytes[v.major+1 : v.minor]
+	}
+	if v.patch > v.minor {
+		vPatch = v.bytes[v.minor+1 : v.patch]
+	}
+
+	res := encodeNumber(vMajor) + "." + encodeNumber(vMinor) + "." + encodeNumber(vPatch)
+	// If there is no pre-release, add a ";" to the end, otherwise add a "-" followed by the pre-release.
+	// This ensure the correct ordering of the pre-release versions (that are always lower than the normal versions).
+	if v.prerelease == v.patch {
+		return res + ";"
+	}
+	res += "-"
+
+	isAlpha := false
+	add := func(in []byte) {
+		// if the pre-release piece is alphanumeric, add a ";" before the piece
+		// otherwise add an ":" before the piece. This ensure the correct ordering
+		// of the pre-release piece (numeric are lower than alphanumeric).
+		if isAlpha {
+			res += ";" + string(in)
+		} else {
+			res += ":" + encodeNumber(in)
+		}
+		isAlpha = false
+	}
+	prerelease := v.bytes[v.patch+1 : v.prerelease]
+	start := 0
+	for curr, c := range prerelease {
+		if c == '.' {
+			add(prerelease[start:curr])
+			res += "."
+			start = curr + 1
+			continue
+		}
+		if !isNumeric(c) {
+			isAlpha = true
+		}
+	}
+	add(prerelease[start:])
+	return res
+}

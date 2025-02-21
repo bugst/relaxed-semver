@@ -103,3 +103,18 @@ func (v *RelaxedVersion) CompatibleWith(u *RelaxedVersion) bool {
 	}
 	return v.Equal(u)
 }
+
+// SortableString returns the version encoded as a string that when compared
+// with alphanumeric ordering it respects the original semver ordering:
+//
+//	(v1.SortableString() < v2.SortableString()) == v1.LessThan(v2)
+//	cmp.Compare[string](v1.SortableString(), v2.SortableString()) == v1.CompareTo(v2)
+//
+// This may turn out useful when the version is saved in a database or is
+// introduced in a system that doesn't support semver ordering.
+func (v *RelaxedVersion) SortableString() string {
+	if v.version != nil {
+		return ";" + v.version.SortableString()
+	}
+	return ":" + string(v.customversion)
+}
