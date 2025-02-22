@@ -62,7 +62,7 @@ func (v *Version) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
-// MarshalBinary implements json.Marshaler
+// MarshalBinary implements encoding.BinaryMarshaler
 func (v *RelaxedVersion) MarshalBinary() ([]byte, error) {
 	res := new(bytes.Buffer)
 	if len(v.customversion) > 0 {
@@ -76,7 +76,7 @@ func (v *RelaxedVersion) MarshalBinary() ([]byte, error) {
 	return res.Bytes(), nil
 }
 
-// UnmarshalBinary implements json.Unmarshaler
+// UnmarshalBinary implements encoding.BinaryUnmarshaler
 func (v *RelaxedVersion) UnmarshalBinary(data []byte) error {
 	if data[0] == 0 {
 		v.customversion, _ = decodeArray(data[1:])
