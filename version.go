@@ -69,6 +69,7 @@ func (v *Version) Normalize() {
 		v.prerelease += 2
 		v.build += 2
 	}
+	v.bytes = []byte(v.raw)
 }
 
 func compareNumber(a, b []byte) int {
@@ -191,9 +192,9 @@ func (v *Version) CompareTo(u *Version) int {
 				return -1
 			}
 		} else if vPatch == vMinor && u.bytes[uIdx] == '0' {
-			return 0
+			// continue
 		} else if uPatch == uMinor && v.bytes[vIdx] == '0' {
-			return 0
+			// continue
 		} else if la > lb {
 			return 1
 		} else {
@@ -479,7 +480,10 @@ func (v *Version) SortableString() string {
 	for curr, c := range prerelease {
 		if c == '.' {
 			add(prerelease[start:curr])
-			res += "."
+			// separate the pre-release pieces with a "," to ensure the correct ordering
+			// of the pre-release pieces (the separator must be lower than any other allowed
+			// character [a-zA-Z0-9-]).
+			res += ","
 			start = curr + 1
 			continue
 		}
