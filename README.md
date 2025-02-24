@@ -96,6 +96,10 @@ The `Version` and `RelaxedVersion` provides optimized `MarshalBinary`/`Unmarshal
 
 The `Version` and `RelaxedVersion` have the YAML un/marshaler implemented so they can be YAML decoded/encoded with the excellent `gopkg.in/yaml.v3` library.
 
+## SQL support
+
+The `Version` and `RelaxedVersion` types provides the `sql.Scanner` and `driver.Valuer` interfaces. Those objects could be directly used in SQL queries, their value will be mapped into a string field.
+
 ## Lexicographic sortable strings that keeps semantic versioning order
 
 The `Version` and `RelaxedVersion` objects provides the `SortableString()` method that returns a string with a peculiar property: the alphanumeric sorting of two `Version.SortableString()` matches the semantic versioning ordering of the underling `Version` objects. In other words, given two `Version` object `a` and `b`:
