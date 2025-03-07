@@ -114,7 +114,7 @@ func (v *RelaxedVersion) CompatibleWith(u *RelaxedVersion) bool {
 // introduced in a system that doesn't support semver ordering.
 func (v *RelaxedVersion) SortableString() string {
 	if v.version != nil {
-		return ";" + v.version.SortableString()
+		return v.version.SortableString()
 	}
 	return ":" + string(v.customversion)
 }
