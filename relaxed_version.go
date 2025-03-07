@@ -118,3 +118,39 @@ func (v *RelaxedVersion) SortableString() string {
 	}
 	return ":" + string(v.customversion)
 }
+
+// IsPrerelase returns true if the version is valid semver and has a pre-release part
+// otherwise it returns false.
+func (v *RelaxedVersion) IsPrerelase() bool {
+	if v.version == nil {
+		return false
+	}
+	return v.version.IsPrerelase()
+}
+
+// Prerelease returns the pre-release part of the version if the version is valid semver
+// otherwise it returns an empty string.
+func (v *RelaxedVersion) Prerelease() string {
+	if v.version == nil {
+		return ""
+	}
+	return v.version.Prerelease()
+}
+
+// HasBuildMetadata returns true if the version is valid semver and has a build metadata part
+// otherwise it returns false.
+func (v *RelaxedVersion) HasBuildMetadata() bool {
+	if v.version == nil {
+		return false
+	}
+	return v.version.HasBuildMetadata()
+}
+
+// BuildMetadata returns the build metadata part of the version if the version is valid semver
+// otherwise it returns an empty string.
+func (v *RelaxedVersion) BuildMetadata() string {
+	if v.version == nil {
+		return ""
+	}
+	return v.version.BuildMetadata()
+}

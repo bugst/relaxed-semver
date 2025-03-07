@@ -305,3 +305,59 @@ func TestCompareNumbers(t *testing.T) {
 	testGreater("10", "1")
 	testGreater("10", "2")
 }
+
+func TestVersionGetters(t *testing.T) {
+	type test struct {
+		version    string
+		prerelease string
+		build      string
+	}
+	tests := []test{
+		{"", "", ""},
+		{"0", "", ""},
+		{"1", "", ""},
+		{"0.1", "", ""},
+		{"1.1", "", ""},
+		{"0.2.3", "", ""},
+		{"1.2.3-aaa", "aaa", ""},
+		{"0.2-aaa", "aaa", ""},
+		{"1-aaa", "aaa", ""},
+		{"0.2.3+bbb", "", "bbb"},
+		{"1.3+bbb", "", "bbb"},
+		{"0+bbb", "", "bbb"},
+		{"1.2.3-aaa+bbb", "aaa", "bbb"},
+		{"0.2-aaa+bbb", "aaa", "bbb"},
+		{"1-aaa+bbb", "aaa", "bbb"},
+		{"0.2.3-aaa.4.5.6+bbb.7.8.9", "aaa.4.5.6", "bbb.7.8.9"},
+	}
+	for _, tt := range tests {
+		v := MustParse(tt.version)
+		require.Equal(t, tt.version, v.String())
+		require.Equal(t, tt.prerelease != "", v.IsPrerelase())
+		require.Equal(t, tt.prerelease, v.Prerelease())
+		require.Equal(t, tt.build != "", v.HasBuildMetadata())
+		require.Equal(t, tt.build, v.BuildMetadata())
+		r := ParseRelaxed(tt.version)
+		require.Equal(t, tt.version, r.String())
+		require.Equal(t, tt.prerelease != "", r.IsPrerelase())
+		require.Equal(t, tt.prerelease, r.Prerelease())
+		require.Equal(t, tt.build != "", r.HasBuildMetadata())
+		require.Equal(t, tt.build, r.BuildMetadata())
+	}
+	relaxedTests := []test{
+		{"asd", "", ""},
+		{"123.123.123.123-123", "", ""},
+		{"1.2.3-a@very@fancy@version", "", ""},
+	}
+	for _, tt := range relaxedTests {
+		v, err := Parse(tt.version)
+		require.Error(t, err, "should not parse %s", tt.version)
+		require.Nil(t, v)
+		r := ParseRelaxed(tt.version)
+		require.Equal(t, tt.version, r.String())
+		require.Equal(t, tt.prerelease != "", r.IsPrerelase())
+		require.Equal(t, tt.prerelease, r.Prerelease())
+		require.Equal(t, tt.build != "", r.HasBuildMetadata())
+		require.Equal(t, tt.build, r.BuildMetadata())
+	}
+}

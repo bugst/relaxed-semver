@@ -494,3 +494,29 @@ func (v *Version) SortableString() string {
 	add(prerelease[start:])
 	return res
 }
+
+// IsPrerelase returns true if the version has a pre-release part
+func (v *Version) IsPrerelase() bool {
+	return v.prerelease != v.patch
+}
+
+// Prerelease returns the pre-release part of the version
+func (v *Version) Prerelease() string {
+	if !v.IsPrerelase() {
+		return ""
+	}
+	return v.raw[v.patch+1 : v.prerelease]
+}
+
+// HasBuildMetadata returns true if the version has a build metadata part
+func (v *Version) HasBuildMetadata() bool {
+	return v.build != v.prerelease
+}
+
+// BuildMetadata returns the build metadata part of the version
+func (v *Version) BuildMetadata() string {
+	if !v.HasBuildMetadata() {
+		return ""
+	}
+	return v.raw[v.prerelease+1 : v.build]
+}
