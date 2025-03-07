@@ -455,7 +455,7 @@ func (v *Version) SortableString() string {
 		vPatch = v.bytes[v.minor+1 : v.patch]
 	}
 
-	res := encodeNumber(vMajor) + "." + encodeNumber(vMinor) + "." + encodeNumber(vPatch)
+	res := ";" + encodeNumber(vMajor) + "." + encodeNumber(vMinor) + "." + encodeNumber(vPatch)
 	// If there is no pre-release, add a ";" to the end, otherwise add a "-" followed by the pre-release.
 	// This ensure the correct ordering of the pre-release versions (that are always lower than the normal versions).
 	if v.prerelease == v.patch {

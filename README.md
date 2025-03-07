@@ -113,22 +113,22 @@ This is accomplished by adding some adjustment characters to the original semver
 
 To give you an idea on how it works, the following table shows some examples of semver versions and their `SortableString` counter part:
 
-| semver             | `SortableString()` |
-| ------------------ | ------------------ |
-| `1.2.4`            | `1.2.4;`           |
-| `1.3.0-rc`         | `1.3.0-;rc`        |
-| `1.3.0-rc.0`       | `1.3.0-;rc,:0`     |
-| `1.3.0-rc.5`       | `1.3.0-;rc,:5`     |
-| `1.3.0-rc.5+build` | `1.3.0-;rc,:5`     |
-| `1.3.0-rc.20`      | `1.3.0-;rc,::20`   |
-| `1.3.0-rc-`        | `1.3.0-;rc-`       |
-| `1.3.0`            | `1.3.0;`           |
-| `1.20.0`           | `1.:20.0;`         |
-| `1.90.0`           | `1.:90.0;`         |
-| `1.300.0-6`        | `1.::300.0-:6`     |
-| `1.300.0-30`       | `1.::300.0-::30`   |
-| `1.300.0-1pre`     | `1.::300.0-;1pre`  |
-| `1.300.0-pre`      | `1.::300.0-;pre`   |
-| `1.300.0`          | `1.::300.0;`       |
+| semver             | `SortableString()`  |
+| ------------------ | ------------------- |
+| `1.2.4`            | `;1.2.4;`           |
+| `1.3.0-rc`         | `;1.3.0-;rc`        |
+| `1.3.0-rc.0`       | `;1.3.0-;rc,:0`     |
+| `1.3.0-rc.5`       | `;1.3.0-;rc,:5`     |
+| `1.3.0-rc.5+build` | `;1.3.0-;rc,:5`     |
+| `1.3.0-rc.20`      | `;1.3.0-;rc,::20`   |
+| `1.3.0-rc-`        | `;1.3.0-;rc-`       |
+| `1.3.0`            | `;1.3.0;`           |
+| `1.20.0`           | `;1.:20.0;`         |
+| `1.90.0`           | `;1.:90.0;`         |
+| `1.300.0-6`        | `;1.::300.0-:6`     |
+| `1.300.0-30`       | `;1.::300.0-::30`   |
+| `1.300.0-1pre`     | `;1.::300.0-;1pre`  |
+| `1.300.0-pre`      | `;1.::300.0-;pre`   |
+| `1.300.0`          | `;1.::300.0;`       |
 
 The `SortableString()` can be used in SQL databases to simplify the ordering of a set of versions in a table.
