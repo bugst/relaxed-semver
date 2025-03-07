@@ -70,7 +70,7 @@ func BenchmarkVersionParser(b *testing.B) {
 		for _, v := range list {
 			res.raw = v
 			res.bytes = []byte(v)
-			parse(res)
+			_ = parse(res)
 		}
 	}
 

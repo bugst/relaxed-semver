@@ -69,7 +69,7 @@ func BenchmarkJSONDecoding(b *testing.B) {
 	data, _ := json.Marshal(v)
 	var u Version
 	for i := 0; i < b.N; i++ {
-		json.Unmarshal(data, &u)
+		_ = json.Unmarshal(data, &u)
 	}
 }
 
@@ -79,6 +79,6 @@ func BenchmarkJSONDecodingRelaxed(b *testing.B) {
 	data, _ := json.Marshal(v)
 	var u RelaxedVersion
 	for i := 0; i < b.N; i++ {
-		json.Unmarshal(data, &u)
+		_ = json.Unmarshal(data, &u)
 	}
 }

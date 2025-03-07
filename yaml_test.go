@@ -82,7 +82,7 @@ func BenchmarkYAMLDecoding(b *testing.B) {
 	data, _ := yaml.Marshal(v)
 	var u Version
 	for i := 0; i < b.N; i++ {
-		yaml.Unmarshal(data, &u)
+		_ = yaml.Unmarshal(data, &u)
 	}
 }
 
@@ -92,6 +92,6 @@ func BenchmarkYAMLDecodingRelaxed(b *testing.B) {
 	data, _ := yaml.Marshal(v)
 	var u RelaxedVersion
 	for i := 0; i < b.N; i++ {
-		yaml.Unmarshal(data, &u)
+		_ = yaml.Unmarshal(data, &u)
 	}
 }

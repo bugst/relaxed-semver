@@ -74,7 +74,7 @@ func BenchmarkBinaryDecoding(b *testing.B) {
 	data, _ := v.MarshalBinary()
 	var u Version
 	for i := 0; i < b.N; i++ {
-		u.UnmarshalBinary(data)
+		_ = u.UnmarshalBinary(data)
 	}
 }
 
@@ -85,6 +85,6 @@ func BenchmarkBinaryDecodingRelaxed(b *testing.B) {
 	data, _ := v.MarshalBinary()
 	var u RelaxedVersion
 	for i := 0; i < b.N; i++ {
-		u.UnmarshalBinary(data)
+		_ = u.UnmarshalBinary(data)
 	}
 }
