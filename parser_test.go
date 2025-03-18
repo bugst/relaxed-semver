@@ -13,6 +13,38 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func (v *Version) majorString() string {
+	return v.raw[:v.major]
+}
+
+func (v *Version) minorString() string {
+	if v.minor > v.major {
+		return v.raw[v.major+1 : v.minor]
+	}
+	return ""
+}
+
+func (v *Version) patchString() string {
+	if v.patch > v.minor {
+		return v.raw[v.minor+1 : v.patch]
+	}
+	return ""
+}
+
+func (v *Version) prereleaseString() string {
+	if v.prerelease > v.patch {
+		return v.raw[v.patch+1 : v.prerelease]
+	}
+	return ""
+}
+
+func (v *Version) buildString() string {
+	if v.build > v.prerelease {
+		return v.raw[v.prerelease+1 : v.build]
+	}
+	return ""
+}
+
 func TestParser(t *testing.T) {
 	MustParse("").CompareTo(MustParse("0+aaa"))
 	valid := func(in, normalized, expectedDump string) {
