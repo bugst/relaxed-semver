@@ -495,9 +495,14 @@ func (v *Version) SortableString() string {
 	return res
 }
 
+// IsPrerelease returns true if the version has a pre-release part
+func (v *Version) IsPrerelease() bool {
+	return v.prerelease != v.patch
+}
+
 // IsPrerelase returns true if the version has a pre-release part
 func (v *Version) IsPrerelase() bool {
-	return v.prerelease != v.patch
+	return v.IsPrerelease()
 }
 
 // Prerelease returns the pre-release part of the version
