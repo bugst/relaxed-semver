@@ -119,13 +119,13 @@ func (v *RelaxedVersion) SortableString() string {
 	return ":" + string(v.customversion)
 }
 
-// IsPrerelase returns true if the version is valid semver and has a pre-release part
+// IsPrerelease returns true if the version is valid semver and has a pre-release part
 // otherwise it returns false.
-func (v *RelaxedVersion) IsPrerelase() bool {
+func (v *RelaxedVersion) IsPrerelease() bool {
 	if v.version == nil {
 		return false
 	}
-	return v.version.IsPrerelase()
+	return v.version.IsPrerelease()
 }
 
 // Prerelease returns the pre-release part of the version if the version is valid semver
