@@ -7,7 +7,7 @@
 package semver
 
 import (
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 // MarshalYAML implements yaml.Marshaler

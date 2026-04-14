@@ -92,9 +92,9 @@ The `Version` and `RelaxedVersion` have the JSON un/marshaler implemented so the
 
 The `Version` and `RelaxedVersion` provides optimized `MarshalBinary`/`UnmarshalBinary` methods for binary encoding.
 
-## Yaml parsable with `gopkg.in/yaml.v3`
+## Yaml parsable with `go.yaml.in/yaml/v3`
 
-The `Version` and `RelaxedVersion` have the YAML un/marshaler implemented so they can be YAML decoded/encoded with the excellent `gopkg.in/yaml.v3` library.
+The `Version` and `RelaxedVersion` have the YAML un/marshaler implemented so they can be YAML decoded/encoded with the excellent `go.yaml.in/yaml/v3` library.
 
 ## SQL support
 
