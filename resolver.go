@@ -103,7 +103,7 @@ func hashDependency[D Dependency](dep D) dependencyHash {
 }
 
 func (ar *Resolver[R, D]) resolve() Releases[R, D] {
-	debug("deps to process: %s", ar.depsToProcess)
+	debug("deps to process: %v", ar.depsToProcess)
 	if len(ar.depsToProcess) == 0 {
 		debug("All dependencies have been resolved.")
 		var res Releases[R, D]
@@ -121,7 +121,7 @@ func (ar *Resolver[R, D]) resolve() Releases[R, D] {
 	// If a release is already picked in the solution check if it match the dep
 	if existingRelease, has := ar.solution[depName]; has {
 		if dep.GetConstraint().Match(existingRelease.GetVersion()) {
-			debug("%s already in solution and matching", existingRelease)
+			debug("%v already in solution and matching", existingRelease)
 			oldDepsToProcess := ar.depsToProcess
 			ar.depsToProcess = ar.depsToProcess[1:]
 			if res := ar.resolve(); res != nil {
@@ -130,7 +130,7 @@ func (ar *Resolver[R, D]) resolve() Releases[R, D] {
 			ar.depsToProcess = oldDepsToProcess
 			return nil
 		}
-		debug("%s already in solution do not match... rollingback", existingRelease)
+		debug("%v already in solution do not match... rollingback", existingRelease)
 		return nil
 	}
 
@@ -139,16 +139,16 @@ func (ar *Resolver[R, D]) resolve() Releases[R, D] {
 
 	// Consider the latest versions first
 	releases.SortDescent()
-	debug("releases matching criteria: %s", releases)
+	debug("releases matching criteria: %v", releases)
 
 backtracking_loop:
 	for _, release := range releases {
 		releaseDeps := release.GetDependencies()
-		debug("try with %s %s", release, releaseDeps)
+		debug("try with %v %v", release, releaseDeps)
 
 		for _, releaseDep := range releaseDeps {
 			if _, ok := ar.releases[releaseDep.GetName()]; !ok {
-				debug("%s did not work, becuase his dependency %s does not exists", release, releaseDep.GetName())
+				debug("%v did not work, becuase his dependency %s does not exists", release, releaseDep.GetName())
 				continue backtracking_loop
 			}
 		}
@@ -166,7 +166,7 @@ backtracking_loop:
 			return res
 		}
 		ar.depsToProcess = oldDepsToProcess
-		debug("%s did not work...", release)
+		debug("%v did not work...", release)
 		delete(ar.solution, depName)
 	}
 
