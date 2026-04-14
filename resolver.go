@@ -130,7 +130,7 @@ func (ar *Resolver[R, D]) resolve() Releases[R, D] {
 			ar.depsToProcess = oldDepsToProcess
 			return nil
 		}
-		debug("%v already in solution do not match... rollingback", existingRelease)
+		debug("%v already in solution do not match... rolling back", existingRelease)
 		return nil
 	}
 
@@ -148,7 +148,7 @@ backtracking_loop:
 
 		for _, releaseDep := range releaseDeps {
 			if _, ok := ar.releases[releaseDep.GetName()]; !ok {
-				debug("%v did not work, becuase his dependency %s does not exists", release, releaseDep.GetName())
+				debug("%v did not work, because its dependency %s does not exist", release, releaseDep.GetName())
 				continue backtracking_loop
 			}
 		}
